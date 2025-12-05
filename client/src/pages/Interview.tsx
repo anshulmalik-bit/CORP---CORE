@@ -110,12 +110,29 @@ export default function Interview() {
     } catch (error) {
       console.error("Chat error:", error);
       setIsTyping(false);
+      
+      const messagesInAct = messages.filter(m => m.role === 'user').length;
+      const shouldAdvance = messagesInAct >= 2;
+      
       const fallbackResponses = [
         "System glitch detected... much like your career trajectory. Let's continue.",
         "My algorithms are processing... processing... Interesting answer.",
         "The corporate hive mind has noted your response. Proceed.",
+        "Connectivity unstable. Your answer has been... stored somewhere.",
+        "Processing... The algorithm is judging you silently.",
       ];
-      addMessage("hr", fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]);
+      
+      if (shouldAdvance) {
+        if (actIndex < ACTS.length - 1) {
+          addMessage("hr", `${fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]}\n\n*Static crackle* Moving to ${ACTS[actIndex + 1].title}...`);
+          setActIndex(prev => prev + 1);
+        } else {
+          addMessage("hr", "The evaluation is complete. Your fate has been sealed. Proceed to receive your verdict.");
+          setTimeout(() => setLocation("/verdict"), 2000);
+        }
+      } else {
+        addMessage("hr", fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]);
+      }
     }
   };
 
