@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
+import heroImg from "@assets/generated_images/dystopian_corporate_office_hero_image.png";
 
 export default function Home() {
   const [_, setLocation] = useLocation();
@@ -20,6 +21,23 @@ export default function Home() {
           className="mb-8 border-4 border-black p-2 bg-accent rotate-[-2deg]"
         >
           <h2 className="text-xl font-bold uppercase tracking-widest">The Ritual Begins</h2>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8 w-full max-w-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-black overflow-hidden relative group"
+        >
+          <img 
+            src={heroImg} 
+            alt="Dystopian Corporate Office" 
+            className="w-full h-64 md:h-80 object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
+          />
+          <div className="absolute inset-0 bg-green-500/20 mix-blend-overlay pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 bg-black text-white px-2 py-1 font-mono text-xs">
+            LOC: HQ-PRIME // SEC: 7G
+          </div>
         </motion.div>
 
         <motion.h1 

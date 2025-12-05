@@ -5,6 +5,8 @@ import { useSession } from "@/lib/context";
 import { motion, AnimatePresence } from "framer-motion";
 import hrAvatar from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
 
+import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
+
 const ACTS = [
   { id: 1, title: "ACT I: THE ICEBREAKER" },
   { id: 2, title: "ACT II: BEHAVIORAL DEEP DIVE" },
@@ -87,15 +89,19 @@ export default function Interview() {
 
   return (
     <Layout>
-      <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto w-full border-x-4 border-black bg-gray-100 relative">
+      <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto w-full border-x-4 border-black bg-gray-100 relative overflow-hidden">
         
+        {/* Background Texture */}
+        <div className="absolute inset-0 opacity-5 pointer-events-none mix-blend-multiply"
+           style={{ backgroundImage: `url(${noiseBg})` }}></div>
+
         {/* Act Indicator */}
-        <div className="bg-black text-white p-2 text-center font-display tracking-widest border-b-4 border-black z-10">
+        <div className="bg-black text-white p-2 text-center font-display tracking-widest border-b-4 border-black z-10 relative">
           {ACTS[actIndex].title}
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={scrollRef}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 relative z-10" ref={scrollRef}>
           {messages.map((msg, idx) => (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}

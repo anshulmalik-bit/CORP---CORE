@@ -56,14 +56,14 @@ export default function PreScreen() {
             className="grid md:grid-cols-3 gap-6"
           >
             {[
-              { id: "BTech", label: "ENGINEERING PRODUCTIVITY ASSET", sub: "(B.Tech / Dev)" },
-              { id: "MBA", label: "MANAGERIAL POWER FANTASY", sub: "(MBA / Lead)" },
-              { id: "Analyst", label: "DATA-DRIVEN EXCEL SOLDIER", sub: "(Analyst)" }
+              { id: "BTech", label: "ENGINEERING PRODUCTIVITY ASSET", sub: "(B.Tech / Dev)", color: "bg-cyan-200 hover:bg-cyan-300" },
+              { id: "MBA", label: "MANAGERIAL POWER FANTASY", sub: "(MBA / Lead)", color: "bg-purple-200 hover:bg-purple-300" },
+              { id: "Analyst", label: "DATA-DRIVEN EXCEL SOLDIER", sub: "(Analyst)", color: "bg-green-200 hover:bg-green-300" }
             ].map((opt) => (
               <button
                 key={opt.id}
                 onClick={() => handleSelect(opt.id as "MBA" | "BTech" | "Analyst")}
-                className="bg-white border-4 border-black p-6 text-left hover:bg-accent hover:text-white transition-colors group relative overflow-hidden"
+                className={`border-4 border-black p-6 text-left transition-colors group relative overflow-hidden ${opt.color}`}
               >
                 <div className="relative z-10">
                   <h3 className="font-display text-2xl mb-2 group-hover:translate-x-2 transition-transform">{opt.label}</h3>
