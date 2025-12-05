@@ -29,7 +29,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInterviewSession(session: InsertInterviewSession): Promise<InterviewSession> {
-    const [newSession] = await db.insert(interviewSessions).values(session).returning();
+    const [newSession] = await db.insert(interviewSessions).values(session as any).returning();
     return newSession;
   }
 

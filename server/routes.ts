@@ -84,7 +84,13 @@ export async function registerRoutes(
   // Save an interview session
   app.post("/api/sessions", async (req, res) => {
     try {
-      const validatedData = insertInterviewSessionSchema.parse(req.body);
+      const sessionData = {
+        ...req.body,
+        strengths: req.body.strengths || [],
+        areasForImprovement: req.body.areasForImprovement || [],
+        interviewTips: req.body.interviewTips || [],
+      };
+      const validatedData = insertInterviewSessionSchema.parse(sessionData);
       const session = await storage.createInterviewSession(validatedData);
       res.json(session);
     } catch (error: any) {

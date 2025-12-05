@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
+import { useSession } from "@/lib/context";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 import heroImg from "@assets/generated_images/dystopian_corporate_office_hero_image.png";
 
 export default function Home() {
   const [_, setLocation] = useLocation();
+  const { resetSession } = useSession();
+
+  useEffect(() => {
+    resetSession();
+  }, []);
 
   return (
     <Layout>
