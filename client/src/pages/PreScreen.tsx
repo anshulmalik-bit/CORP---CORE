@@ -44,7 +44,7 @@ export default function PreScreen() {
         <div className="bg-black text-green-500 font-mono p-6 border-4 border-gray-500 shadow-[10px_10px_0px_0px_rgba(0,0,0,0.5)] min-h-[300px] mb-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-green-500 opacity-20 animate-[scan_2s_linear_infinite]"></div>
           {log.map((l, i) => (
-            <div key={i} className="mb-2">> {l}</div>
+            <div key={i} className="mb-2">&gt; {l}</div>
           ))}
           {!showOptions && <span className="animate-pulse">_</span>}
         </div>
