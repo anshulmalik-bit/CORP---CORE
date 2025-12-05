@@ -5,12 +5,45 @@ import { useSession } from "@/lib/context";
 import { motion } from "framer-motion";
 
 const lines = [
-  "Checking for corporate obedience...",
-  "Analyzing buzzword density in brain...",
-  "Detecting impostor syndrome levels...",
-  "Calibrating fake smile...",
-  "Optimizing for maximum burnout...",
-  "SUCCESS: Subject is ready for exploitation."
+  ">> Initializing corporate brain scanner...",
+  ">> Checking for independent thoughts... FOUND. Deleting...",
+  ">> Analyzing LinkedIn cringe tolerance...",
+  ">> Measuring willingness to work for 'exposure'...",
+  ">> Detecting impostor syndrome levels... OVER 9000",
+  ">> Calibrating fake enthusiasm module...",
+  ">> Downloading buzzword dictionary...",
+  ">> Loading gaslighting protocols...",
+  ">> SUCCESS: Subject is ready for exploitation. I mean, exploration."
+];
+
+const archetypes = [
+  { 
+    id: "BTech", 
+    label: "TECH BRO ARC", 
+    sub: "(B.Tech / Developer)", 
+    color: "bg-cyan-200 hover:bg-cyan-400 border-cyan-400",
+    emoji: "💻",
+    vibe: "you probably mass apply on LinkedIn",
+    trait: "Debugging skills: EXISTS. Social skills: 404"
+  },
+  { 
+    id: "MBA", 
+    label: "MANAGER FANTASY", 
+    sub: "(MBA / Lead)", 
+    color: "bg-purple-200 hover:bg-purple-400 border-purple-400",
+    emoji: "📊",
+    vibe: "PowerPoint is your love language",
+    trait: "Leadership: SELF-PROCLAIMED. Experience: VIBES"
+  },
+  { 
+    id: "Analyst", 
+    label: "EXCEL WARRIOR", 
+    sub: "(Analyst)", 
+    color: "bg-green-200 hover:bg-green-400 border-green-400",
+    emoji: "📈",
+    vibe: "VLOOKUP haunts your dreams",
+    trait: "Pivot tables: MASTERED. Touch grass: PENDING"
+  }
 ];
 
 export default function PreScreen() {
@@ -18,15 +51,16 @@ export default function PreScreen() {
   const { setArchetype } = useSession();
   const [log, setLog] = useState<string[]>([]);
   const [showOptions, setShowOptions] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   useEffect(() => {
     let delay = 0;
     lines.forEach((line, index) => {
-      delay += Math.random() * 800 + 400;
+      delay += Math.random() * 600 + 300;
       setTimeout(() => {
         setLog((prev) => [...prev, line]);
         if (index === lines.length - 1) {
-          setShowOptions(true);
+          setTimeout(() => setShowOptions(true), 500);
         }
       }, delay);
     });
@@ -41,38 +75,110 @@ export default function PreScreen() {
     <Layout>
       <div className="container mx-auto px-4 py-8 flex flex-col justify-center min-h-[80vh]">
         
-        <div className="bg-black text-green-500 font-mono p-6 border-4 border-gray-500 shadow-[10px_10px_0px_0px_rgba(0,0,0,0.5)] min-h-[300px] mb-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-green-500 opacity-20 animate-[scan_2s_linear_infinite]"></div>
-          {log.map((l, i) => (
-            <div key={i} className="mb-2">&gt; {l}</div>
-          ))}
-          {!showOptions && <span className="animate-pulse">_</span>}
+        {/* Terminal Header */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-destructive"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+            <div className="w-3 h-3 rounded-full bg-accent"></div>
+          </div>
+          <span className="font-mono text-xs text-gray-500">HR-9000 Terminal v6.9.420 — bash</span>
         </div>
+        
+        {/* Terminal */}
+        <div className="bg-black text-green-400 font-mono p-4 md:p-6 border-4 border-green-500 shadow-[0_0_20px_rgba(0,255,0,0.3)] min-h-[280px] md:min-h-[320px] mb-8 relative overflow-hidden">
+          {/* Scanline effect */}
+          <div className="absolute inset-0 pointer-events-none opacity-10">
+            <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,255,0,0.1)_2px,rgba(0,255,0,0.1)_4px)]"></div>
+          </div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-green-500 opacity-50 animate-[scan_2s_linear_infinite]"></div>
+          
+          <div className="relative z-10 text-xs md:text-sm">
+            {log.map((l, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`mb-2 ${l.includes('SUCCESS') ? 'text-accent font-bold' : ''} ${l.includes('ERROR') || l.includes('OVER 9000') ? 'text-destructive' : ''}`}
+              >
+                {l}
+              </motion.div>
+            ))}
+            {!showOptions && <span className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1">_</span>}
+          </div>
+          
+          {/* Corner decorations */}
+          <div className="absolute bottom-2 right-2 text-[10px] text-green-600">
+            CPU: 420% | RAM: YES | VIBES: IMMACULATE
+          </div>
+        </div>
+
+        {/* Title before options */}
+        {showOptions && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-6"
+          >
+            <h2 className="font-display text-2xl md:text-4xl uppercase mb-2">CHOOSE YOUR SUFFERING</h2>
+            <p className="font-mono text-xs text-gray-500">(all paths lead to the same burnout, bestie)</p>
+          </motion.div>
+        )}
 
         {showOptions && (
           <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }}
-            className="grid md:grid-cols-3 gap-6"
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="grid md:grid-cols-3 gap-4 md:gap-6"
           >
-            {[
-              { id: "BTech", label: "ENGINEERING PRODUCTIVITY ASSET", sub: "(B.Tech / Dev)", color: "bg-cyan-200 hover:bg-cyan-300" },
-              { id: "MBA", label: "MANAGERIAL POWER FANTASY", sub: "(MBA / Lead)", color: "bg-purple-200 hover:bg-purple-300" },
-              { id: "Analyst", label: "DATA-DRIVEN EXCEL SOLDIER", sub: "(Analyst)", color: "bg-green-200 hover:bg-green-300" }
-            ].map((opt) => (
-              <button
+            {archetypes.map((opt, index) => (
+              <motion.button
                 key={opt.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.15 }}
                 onClick={() => handleSelect(opt.id as "MBA" | "BTech" | "Analyst")}
-                className={`border-4 border-black p-6 text-left transition-colors group relative overflow-hidden ${opt.color}`}
+                onMouseEnter={() => setHoveredCard(opt.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                className={`${opt.color} p-4 md:p-6 border-4 border-black text-left font-mono shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all relative overflow-hidden group`}
+                data-testid={`button-archetype-${opt.id}`}
               >
-                <div className="relative z-10">
-                  <h3 className="font-display text-2xl mb-2 group-hover:translate-x-2 transition-transform">{opt.label}</h3>
-                  <p className="font-mono text-sm opacity-70">{opt.sub}</p>
+                {/* Emoji decoration */}
+                <div className="absolute -right-4 -top-4 text-6xl md:text-8xl opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all">
+                  {opt.emoji}
                 </div>
-                <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-0 opacity-10"></div>
-              </button>
+                
+                <div className="relative z-10">
+                  <div className="text-4xl md:text-5xl mb-3">{opt.emoji}</div>
+                  <h3 className="font-display text-lg md:text-xl mb-1">{opt.label}</h3>
+                  <p className="text-xs text-gray-600 mb-3">{opt.sub}</p>
+                  
+                  <div className="border-t-2 border-black/20 pt-3 mt-3">
+                    <p className="text-[10px] md:text-xs italic text-gray-700 mb-2">"{opt.vibe}"</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider">{opt.trait}</p>
+                  </div>
+                </div>
+
+                {/* Hover badge */}
+                <div className={`absolute top-2 right-2 bg-black text-white text-[10px] px-2 py-0.5 transition-all ${hoveredCard === opt.id ? 'opacity-100' : 'opacity-0'}`}>
+                  CLICK ME PLS
+                </div>
+              </motion.button>
             ))}
           </motion.div>
+        )}
+
+        {/* Bottom disclaimer */}
+        {showOptions && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center mt-8 font-mono text-xs text-gray-400"
+          >
+            Pro tip: Your choice doesn't matter. Capitalism doesn't discriminate. 
+            <span className="block mt-1">It exploits everyone equally.</span>
+          </motion.p>
         )}
       </div>
     </Layout>

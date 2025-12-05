@@ -7,11 +7,11 @@ import hrAvatar from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 
 const ACTS = [
-  { id: 1, title: "ACT I: THE ICEBREAKER" },
-  { id: 2, title: "ACT II: BEHAVIORAL DEEP DIVE" },
-  { id: 3, title: "ACT III: CHAOS MODE" },
-  { id: 4, title: "ACT IV: ROLE TRIAL" },
-  { id: 5, title: "ACT V: FINAL JUDGMENT" }
+  { id: 1, title: "ACT I: THE ICEBREAKER", emoji: "🧊", vibe: "let's pretend we're normal" },
+  { id: 2, title: "ACT II: BEHAVIORAL DEEP DIVE", emoji: "🤿", vibe: "time for trauma mining" },
+  { id: 3, title: "ACT III: CHAOS MODE", emoji: "🌀", vibe: "expect the unexpected bestie" },
+  { id: 4, title: "ACT IV: ROLE TRIAL", emoji: "⚔️", vibe: "prove your worth or perish" },
+  { id: 5, title: "ACT V: FINAL JUDGMENT", emoji: "⚖️", vibe: "the algorithm has decided" }
 ];
 
 export default function Interview() {
@@ -150,15 +150,22 @@ export default function Interview() {
         <div className="absolute inset-0 opacity-5 pointer-events-none mix-blend-multiply"
            style={{ backgroundImage: `url(${noiseBg})` }}></div>
 
-        <div className="bg-black text-white p-2 text-center font-display tracking-widest border-b-4 border-black z-10 relative">
+        <div className="bg-black text-white p-3 text-center font-display tracking-widest border-b-4 border-secondary z-10 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 via-transparent to-accent/20"></div>
           <AnimatePresence mode="wait">
             <motion.div
               key={actIndex}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
+              className="relative z-10"
             >
-              {ACTS[actIndex].title}
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">{ACTS[actIndex].emoji}</span>
+                <span>{ACTS[actIndex].title}</span>
+                <span className="text-xl">{ACTS[actIndex].emoji}</span>
+              </div>
+              <p className="text-[10px] font-mono text-gray-400 mt-1">({ACTS[actIndex].vibe})</p>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -240,9 +247,16 @@ export default function Interview() {
               SUBMIT
             </button>
           </div>
-          <p className="text-xs font-mono text-gray-400 mt-2 text-center">
-            Act {actIndex + 1} of 5 • {archetype || "Unknown"} Track • Press Enter to send
-          </p>
+          <div className="flex items-center justify-center gap-4 text-xs font-mono text-gray-400 mt-2">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
+              Act {actIndex + 1}/5
+            </span>
+            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline bg-gray-100 px-2 py-0.5">{archetype || "Unknown"} Arc</span>
+            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline">press enter if you dare</span>
+          </div>
         </div>
 
       </div>

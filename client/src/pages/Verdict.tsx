@@ -116,10 +116,17 @@ export default function Verdict() {
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 80) return "CONDITIONALLY EMPLOYABLE";
-    if (score >= 60) return "REQUIRES ADDITIONAL PROCESSING";
-    if (score >= 40) return "CORPORATE POTENTIAL DETECTED";
-    return "SYSTEM RECOMMENDS FURTHER EVALUATION";
+    if (score >= 80) return "YOU ATE THAT 💅";
+    if (score >= 60) return "MID BUT FIXABLE";
+    if (score >= 40) return "IT'S GIVING... EFFORT";
+    return "MAYBE TRY NEPOTISM?";
+  };
+
+  const getScoreEmoji = (score: number) => {
+    if (score >= 80) return "🔥";
+    if (score >= 60) return "😅";
+    if (score >= 40) return "💀";
+    return "🚩";
   };
 
   if (loading) {
@@ -187,20 +194,47 @@ export default function Verdict() {
                 </div>
               </div>
 
-              <div className="text-center mb-8 p-6 border-4 border-black bg-gray-50">
-                <p className="font-mono text-sm mb-2">CORPORATE SURVIVAL SCORE</p>
+              <div className="text-center mb-8 p-6 border-4 border-black bg-gradient-to-b from-gray-50 to-gray-100 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#000_10px,#000_11px)]"></div>
+                </div>
+                <p className="font-mono text-sm mb-2 relative">CORPORATE SURVIVAL SCORE</p>
+                <div className="flex items-center justify-center gap-4 relative">
+                  <motion.span 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="text-4xl md:text-6xl"
+                  >
+                    {getScoreEmoji(verdict.score)}
+                  </motion.span>
+                  <motion.p 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.5, type: "spring" }}
+                    className={`font-display text-7xl md:text-9xl ${getScoreColor(verdict.score)}`}
+                    data-testid="text-score"
+                  >
+                    {verdict.score}
+                  </motion.p>
+                  <motion.span 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="text-4xl md:text-6xl"
+                  >
+                    {getScoreEmoji(verdict.score)}
+                  </motion.span>
+                </div>
                 <motion.p 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: "spring" }}
-                  className={`font-display text-7xl md:text-9xl ${getScoreColor(verdict.score)}`}
-                  data-testid="text-score"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9 }}
+                  className="font-mono text-sm mt-3 uppercase tracking-widest bg-black text-white px-4 py-1 inline-block" 
+                  data-testid="text-score-label"
                 >
-                  {verdict.score}
-                </motion.p>
-                <p className="font-mono text-xs mt-2 uppercase tracking-widest" data-testid="text-score-label">
                   {getScoreLabel(verdict.score)}
-                </p>
+                </motion.p>
               </div>
 
               <div className="mb-8 p-4 border-2 border-black bg-accent/20">
@@ -270,9 +304,14 @@ export default function Verdict() {
                 </Link>
               </div>
 
-              <p className="text-center font-mono text-xs text-gray-400 mt-6">
-                This evaluation is final. Appeals will be processed in 3-5 business eternities.
-              </p>
+              <div className="text-center mt-6 space-y-2">
+                <p className="font-mono text-xs text-gray-400">
+                  This evaluation is final. Appeals will be processed in 3-5 business eternities.
+                </p>
+                <p className="font-mono text-[10px] text-gray-300">
+                  no thoughts just corporate | slay responsibly | HR is watching 👁️
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
