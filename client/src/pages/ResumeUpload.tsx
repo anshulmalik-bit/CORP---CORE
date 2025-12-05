@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { motion } from "framer-motion";
+import scannerImg from "@assets/generated_images/chaotic_resume_shredder_and_scanner.png";
+import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 
 export default function ResumeUpload() {
   const [_, setLocation] = useLocation();
@@ -39,12 +41,20 @@ export default function ResumeUpload() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[80vh]">
+      <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay"
+           style={{ backgroundImage: `url(${noiseBg})` }}></div>
+
+      <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[80vh] relative z-10">
         <h1 className="text-4xl md:text-6xl font-display uppercase mb-12 text-center">
           SUBMIT YOUR <span className="text-secondary bg-black px-2">LIES</span>
         </h1>
 
         <div className="w-full max-w-xl relative">
+          {/* Scanner Image Background */}
+          <div className="absolute -inset-20 opacity-20 pointer-events-none mix-blend-multiply z-0">
+             <img src={scannerImg} alt="" className="w-full h-full object-contain opacity-50 blur-sm" />
+          </div>
+
           <div className="border-4 border-black bg-white p-12 text-center brutalist-shadow-lg relative z-10">
             
             {!uploading ? (
