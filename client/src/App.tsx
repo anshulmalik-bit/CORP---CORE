@@ -10,6 +10,7 @@ import PreScreen from "@/pages/PreScreen";
 import ResumeUpload from "@/pages/ResumeUpload";
 import Interview from "@/pages/Interview";
 import Verdict from "@/pages/Verdict";
+import History from "@/pages/History";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/resume" component={ResumeUpload} />
       <Route path="/interview" component={Interview} />
       <Route path="/verdict" component={Verdict} />
+      <Route path="/history" component={History} />
       <Route component={NotFound} />
     </Switch>
   );

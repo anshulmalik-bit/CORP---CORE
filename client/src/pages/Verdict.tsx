@@ -1,17 +1,46 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
 import { motion } from "framer-motion";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 import stampImg from "@assets/generated_images/gritty_ink_stamp_of_corporate_disapproval.png";
+import { useMutation } from "@tanstack/react-query";
 
 export default function Verdict() {
   const [_, setLocation] = useLocation();
-  const { archetype } = useSession();
+  const { archetype, transcript, score, setScore } = useSession();
 
-  // Randomize score for demo
-  const score = Math.floor(Math.random() * 40) + 30; // 30-70 range (mediocre)
+  // Initialize score if not set
+  useEffect(() => {
+    if (score === 50) {
+      setScore(Math.floor(Math.random() * 40) + 30);
+    }
+  }, []);
+
+  // Save session to database
+  const saveSessionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          archetype: archetype || "Unknown",
+          score,
+          transcript,
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to save session");
+      return response.json();
+    },
+  });
+
+  // Auto-save on mount
+  useEffect(() => {
+    if (transcript.length > 0) {
+      saveSessionMutation.mutate();
+    }
+  }, []);
 
   return (
     <Layout>

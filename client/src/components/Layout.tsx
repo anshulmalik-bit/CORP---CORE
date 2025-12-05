@@ -20,7 +20,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* FOOTER */}
       <footer className="border-t-4 border-black bg-white p-4 flex justify-between items-center text-xs uppercase font-bold tracking-widest">
         <div>© 2025 CORPORATE ENTITY INC.</div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          <Link href="/history">
+            <button className="hover:text-secondary transition-colors">VIEW FAILURES</button>
+          </Link>
           <span>ID: 994-21-X</span>
           <span className="text-destructive animate-pulse">RECORDING...</span>
         </div>
