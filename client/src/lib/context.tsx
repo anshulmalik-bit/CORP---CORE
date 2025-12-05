@@ -2,6 +2,23 @@ import React, { createContext, useContext, useState } from "react";
 
 type Archetype = "MBA" | "BTech" | "Analyst" | null;
 
+interface ResumeAnalysis {
+  feedback: string;
+  strengths: string[];
+  weaknesses: string[];
+  buzzwordScore: number;
+}
+
+interface VerdictData {
+  score: number;
+  verdict: string;
+  corporateTitle: string;
+  strengths: string[];
+  areasForImprovement: string[];
+  realAdvice: string;
+  interviewTips: string[];
+}
+
 interface SessionState {
   archetype: Archetype;
   setArchetype: (a: Archetype) => void;
@@ -11,6 +28,14 @@ interface SessionState {
   setScore: (s: number) => void;
   transcript: { role: "hr" | "user"; text: string }[];
   addTranscript: (role: "hr" | "user", text: string) => void;
+  clearTranscript: () => void;
+  resumeText: string;
+  setResumeText: (t: string) => void;
+  resumeAnalysis: ResumeAnalysis | null;
+  setResumeAnalysis: (a: ResumeAnalysis | null) => void;
+  verdictData: VerdictData | null;
+  setVerdictData: (v: VerdictData | null) => void;
+  resetSession: () => void;
 }
 
 const SessionContext = createContext<SessionState | undefined>(undefined);
@@ -20,9 +45,26 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [name, setName] = useState("Candidate 404");
   const [score, setScore] = useState(50);
   const [transcript, setTranscript] = useState<{ role: "hr" | "user"; text: string }[]>([]);
+  const [resumeText, setResumeText] = useState("");
+  const [resumeAnalysis, setResumeAnalysis] = useState<ResumeAnalysis | null>(null);
+  const [verdictData, setVerdictData] = useState<VerdictData | null>(null);
 
   const addTranscript = (role: "hr" | "user", text: string) => {
     setTranscript((prev) => [...prev, { role, text }]);
+  };
+
+  const clearTranscript = () => {
+    setTranscript([]);
+  };
+
+  const resetSession = () => {
+    setArchetype(null);
+    setName("Candidate 404");
+    setScore(50);
+    setTranscript([]);
+    setResumeText("");
+    setResumeAnalysis(null);
+    setVerdictData(null);
   };
 
   return (
@@ -36,6 +78,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setScore,
         transcript,
         addTranscript,
+        clearTranscript,
+        resumeText,
+        setResumeText,
+        resumeAnalysis,
+        setResumeAnalysis,
+        verdictData,
+        setVerdictData,
+        resetSession,
       }}
     >
       {children}

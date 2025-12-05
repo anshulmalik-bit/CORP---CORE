@@ -22,6 +22,13 @@ export const interviewSessions = pgTable("interview_sessions", {
   archetype: text("archetype").notNull(),
   score: integer("score").notNull(),
   transcript: jsonb("transcript").notNull().$type<Array<{ role: "hr" | "user"; text: string }>>(),
+  resumeSummary: text("resume_summary"),
+  verdict: text("verdict"),
+  corporateTitle: text("corporate_title"),
+  strengths: jsonb("strengths").$type<string[]>(),
+  areasForImprovement: jsonb("areas_for_improvement").$type<string[]>(),
+  realAdvice: text("real_advice"),
+  interviewTips: jsonb("interview_tips").$type<string[]>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
