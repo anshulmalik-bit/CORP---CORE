@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import type { ATSScore, CompanyProfile } from "@shared/schema";
 
 type Archetype = "MBA" | "BTech" | "Analyst" | null;
 
@@ -7,6 +8,7 @@ interface ResumeAnalysis {
   strengths: string[];
   weaknesses: string[];
   buzzwordScore: number;
+  atsScore?: ATSScore;
 }
 
 interface VerdictData {
@@ -35,6 +37,10 @@ interface SessionState {
   setResumeAnalysis: (a: ResumeAnalysis | null) => void;
   verdictData: VerdictData | null;
   setVerdictData: (v: VerdictData | null) => void;
+  targetCompany: string;
+  setTargetCompany: (c: string) => void;
+  companyProfile: CompanyProfile | null;
+  setCompanyProfile: (p: CompanyProfile | null) => void;
   resetSession: () => void;
 }
 
@@ -48,6 +54,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [resumeText, setResumeText] = useState("");
   const [resumeAnalysis, setResumeAnalysis] = useState<ResumeAnalysis | null>(null);
   const [verdictData, setVerdictData] = useState<VerdictData | null>(null);
+  const [targetCompany, setTargetCompany] = useState("");
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
 
   const addTranscript = (role: "hr" | "user", text: string) => {
     setTranscript((prev) => [...prev, { role, text }]);
@@ -65,6 +73,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setResumeText("");
     setResumeAnalysis(null);
     setVerdictData(null);
+    setTargetCompany("");
+    setCompanyProfile(null);
   };
 
   return (
@@ -85,6 +95,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setResumeAnalysis,
         verdictData,
         setVerdictData,
+        targetCompany,
+        setTargetCompany,
+        companyProfile,
+        setCompanyProfile,
         resetSession,
       }}
     >

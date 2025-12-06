@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
 import { motion, AnimatePresence } from "framer-motion";
+import type { CompanyProfile } from "@shared/schema";
 
 const lines = [
   ">> Initializing corporate brain scanner...",
@@ -48,10 +49,15 @@ const archetypes = [
 
 export default function PreScreen() {
   const [_, setLocation] = useLocation();
-  const { setArchetype } = useSession();
+  const { setArchetype, setTargetCompany, setCompanyProfile } = useSession();
   const [log, setLog] = useState<string[]>([]);
   const [showOptions, setShowOptions] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [selectedArchetype, setSelectedArchetype] = useState<"MBA" | "BTech" | "Analyst" | null>(null);
+  const [showCompanyInput, setShowCompanyInput] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [isResearching, setIsResearching] = useState(false);
+  const [researchStatus, setResearchStatus] = useState("");
 
   useEffect(() => {
     let delay = 0;
@@ -67,7 +73,59 @@ export default function PreScreen() {
   }, []);
 
   const handleSelect = (type: "MBA" | "BTech" | "Analyst") => {
+    setSelectedArchetype(type);
     setArchetype(type);
+    setShowOptions(false);
+    setTimeout(() => setShowCompanyInput(true), 300);
+  };
+
+  const handleCompanySubmit = async () => {
+    const trimmedName = companyName.trim();
+    
+    if (!trimmedName) {
+      setTargetCompany("");
+      setCompanyProfile(null);
+      setLocation("/resume");
+      return;
+    }
+    
+    setIsResearching(true);
+    setResearchStatus("Initiating corporate espionage... I mean, research...");
+    setTargetCompany(trimmedName);
+    
+    try {
+      const response = await fetch("/api/company/research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyName: trimmedName })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCompanyProfile(data.profile);
+        setResearchStatus("Intel acquired. Target identified. Proceeding...");
+      } else {
+        const data = await response.json();
+        if (data.fallback && data.profile) {
+          setCompanyProfile(data.profile);
+          setResearchStatus("Research limited. Proceeding with generic intel...");
+        } else {
+          setResearchStatus("Research failed. Proceeding without company data...");
+        }
+      }
+    } catch (error) {
+      console.error("Company research error:", error);
+      setResearchStatus("Network error. Proceeding without company intel...");
+    }
+    
+    setTimeout(() => {
+      setLocation("/resume");
+    }, 1500);
+  };
+
+  const handleSkipCompany = () => {
+    setTargetCompany("");
+    setCompanyProfile(null);
     setLocation("/resume");
   };
 
@@ -89,7 +147,7 @@ export default function PreScreen() {
       y: 0, 
       scale: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 20
       }
@@ -284,6 +342,148 @@ export default function PreScreen() {
               Pro tip: Your choice doesn't matter. Capitalism doesn't discriminate. 
               <span className="block mt-1">It exploits everyone equally.</span>
             </motion.p>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showCompanyInput && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              className="max-w-xl mx-auto"
+            >
+              <motion.div 
+                className="bg-white border-4 border-black p-6 md:p-8 brutalist-shadow-lg relative"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring" as const, stiffness: 300, damping: 20 }}
+              >
+                <motion.div 
+                  className="absolute -top-3 -left-3 bg-secondary text-white border-2 border-black px-3 py-1 font-mono text-xs rotate-[-3deg]"
+                  initial={{ opacity: 0, rotate: 0 }}
+                  animate={{ opacity: 1, rotate: -3 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  STEP 2: INTEL GATHERING
+                </motion.div>
+
+                <motion.h2 
+                  className="font-display text-2xl md:text-3xl uppercase text-center mb-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  TARGET COMPANY?
+                </motion.h2>
+                
+                <motion.p 
+                  className="text-center font-mono text-xs text-gray-500 mb-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  (Optional: We'll research your target for customized interrogation)
+                </motion.p>
+
+                {!isResearching ? (
+                  <motion.div 
+                    className="space-y-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="e.g., Google, Amazon, Netflix..."
+                        className="w-full p-4 border-4 border-black font-mono text-lg focus:outline-none focus:ring-4 focus:ring-secondary/50 placeholder:text-gray-400"
+                        data-testid="input-company-name"
+                        onKeyDown={(e) => e.key === 'Enter' && handleCompanySubmit()}
+                      />
+                      <motion.div 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-2xl"
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        🎯
+                      </motion.div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <motion.button
+                        onClick={handleCompanySubmit}
+                        className="flex-1 bg-secondary text-white font-display text-lg py-3 border-4 border-black hover:bg-black transition-colors uppercase brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                        data-testid="button-research-company"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {companyName.trim() ? "RESEARCH TARGET" : "PROCEED WITHOUT TARGET"}
+                      </motion.button>
+                    </div>
+
+                    <motion.button
+                      onClick={handleSkipCompany}
+                      className="w-full text-sm font-mono text-gray-500 hover:text-black underline transition-colors"
+                      data-testid="button-skip-company"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      Skip — I'm applying everywhere anyway
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    className="text-center py-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <motion.div 
+                      className="flex justify-center gap-2 mb-4"
+                    >
+                      {[...Array(3)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="w-4 h-4 bg-secondary"
+                          animate={{ 
+                            scale: [1, 1.5, 1],
+                            rotate: [0, 180, 360],
+                            borderRadius: ["0%", "50%", "0%"]
+                          }}
+                          transition={{ 
+                            duration: 1,
+                            repeat: Infinity,
+                            delay: i * 0.2
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                    <motion.p 
+                      className="font-mono text-sm"
+                      animate={{ opacity: [1, 0.5, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      {researchStatus}
+                    </motion.p>
+                    <p className="font-mono text-xs text-gray-400 mt-2">
+                      Scanning corporate databases...
+                    </p>
+                  </motion.div>
+                )}
+
+                {selectedArchetype && (
+                  <motion.div 
+                    className="absolute -bottom-3 -right-3 bg-accent border-2 border-black px-3 py-1 font-mono text-xs rotate-[3deg]"
+                    initial={{ opacity: 0, rotate: 0 }}
+                    animate={{ opacity: 1, rotate: 3 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    TRACK: {archetypes.find(a => a.id === selectedArchetype)?.label}
+                  </motion.div>
+                )}
+              </motion.div>
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>

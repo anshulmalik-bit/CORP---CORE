@@ -17,6 +17,41 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+export interface ATSScore {
+  overall: number;
+  sections: {
+    experience: number;
+    skills: number;
+    keywords: number;
+    formatting: number;
+    education: number;
+  };
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  recommendations: string[];
+  parsedSections: {
+    experience?: string;
+    skills?: string;
+    education?: string;
+    summary?: string;
+  };
+}
+
+export interface CompanyProfile {
+  name: string;
+  industry: string;
+  overview: string;
+  history: string;
+  financialSituation: string;
+  futurePlans: string;
+  culture: string;
+  interviewStyle: string;
+  typicalQuestions: string[];
+  values: string[];
+  recentNews: string;
+  sources: string[];
+}
+
 export const interviewSessions = pgTable("interview_sessions", {
   id: serial("id").primaryKey(),
   archetype: text("archetype").notNull(),
@@ -29,6 +64,9 @@ export const interviewSessions = pgTable("interview_sessions", {
   areasForImprovement: jsonb("areas_for_improvement").$type<string[]>(),
   realAdvice: text("real_advice"),
   interviewTips: jsonb("interview_tips").$type<string[]>(),
+  companyName: text("company_name"),
+  companyProfile: jsonb("company_profile").$type<CompanyProfile>(),
+  atsScore: jsonb("ats_score").$type<ATSScore>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

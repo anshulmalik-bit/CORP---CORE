@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertInterviewSessionSchema } from "@shared/schema";
+import { insertInterviewSessionSchema, type CompanyProfile } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { 
   analyzeResume, 
@@ -10,20 +10,66 @@ import {
   generateInitialGreeting,
   type Archetype 
 } from "./openai";
+import { researchCompany, isPerplexityConfigured } from "./perplexity";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
-  // Analyze resume and generate feedback
+  app.get("/api/company/status", async (req, res) => {
+    res.json({ configured: isPerplexityConfigured() });
+  });
+
+  app.post("/api/company/research", async (req, res) => {
+    try {
+      const { companyName } = req.body;
+      if (!companyName) {
+        return res.status(400).json({ error: "Company name is required" });
+      }
+      
+      if (!isPerplexityConfigured()) {
+        return res.status(503).json({ 
+          error: "Company research service not configured",
+          fallback: true,
+          profile: {
+            name: companyName,
+            industry: "Unknown",
+            overview: `Research for ${companyName} requires additional configuration. Proceeding with general interview preparation.`,
+            history: "Company history not available",
+            financialSituation: "Financial information not available",
+            futurePlans: "Strategic plans not available",
+            culture: "Company culture information not available",
+            interviewStyle: "Standard multi-round interview process expected",
+            typicalQuestions: [
+              "Tell me about yourself",
+              "Why do you want to work here?",
+              "What are your strengths and weaknesses?",
+              "Describe a challenging situation you faced",
+              "Where do you see yourself in 5 years?"
+            ],
+            values: ["Excellence", "Innovation", "Collaboration"],
+            recentNews: "Recent news not available",
+            sources: []
+          } as CompanyProfile
+        });
+      }
+      
+      const profile = await researchCompany(companyName);
+      res.json({ profile });
+    } catch (error: any) {
+      console.error("Company research error:", error);
+      res.status(500).json({ error: "Failed to research company" });
+    }
+  });
+
   app.post("/api/resume/analyze", async (req, res) => {
     try {
-      const { resumeText, archetype } = req.body;
+      const { resumeText, archetype, companyProfile } = req.body;
       if (!resumeText || !archetype) {
         return res.status(400).json({ error: "Resume text and archetype required" });
       }
-      const analysis = await analyzeResume(resumeText, archetype as Archetype);
+      const analysis = await analyzeResume(resumeText, archetype as Archetype, companyProfile);
       res.json(analysis);
     } catch (error: any) {
       console.error("Resume analysis error:", error);

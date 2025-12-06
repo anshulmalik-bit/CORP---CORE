@@ -1,4 +1,5 @@
 import Groq from "groq-sdk";
+import type { ATSScore, CompanyProfile } from "@shared/schema";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -8,6 +9,30 @@ interface ChatMessage {
   role: "hr" | "user";
   text: string;
 }
+
+const ROLE_KEYWORDS: Record<Archetype, string[]> = {
+  BTech: [
+    "javascript", "typescript", "python", "java", "react", "node", "sql", "git", "api", "database",
+    "algorithm", "data structure", "testing", "agile", "scrum", "ci/cd", "docker", "kubernetes",
+    "aws", "cloud", "microservices", "rest", "graphql", "mongodb", "postgresql", "linux", "debugging",
+    "code review", "full stack", "backend", "frontend", "mobile", "ios", "android", "machine learning",
+    "software development", "programming", "engineering", "technical", "system design"
+  ],
+  MBA: [
+    "leadership", "strategy", "management", "business development", "p&l", "revenue", "growth",
+    "stakeholder", "cross-functional", "team building", "negotiation", "presentation", "analytics",
+    "market analysis", "competitive analysis", "roi", "kpi", "budget", "forecasting", "marketing",
+    "sales", "operations", "consulting", "project management", "change management", "innovation",
+    "entrepreneurship", "investment", "financial", "strategic planning", "executive", "director"
+  ],
+  Analyst: [
+    "excel", "sql", "python", "tableau", "power bi", "data analysis", "visualization", "reporting",
+    "dashboard", "metrics", "kpi", "statistics", "forecasting", "modeling", "regression", "hypothesis",
+    "a/b testing", "research", "insights", "trends", "presentation", "stakeholder", "documentation",
+    "requirements", "business intelligence", "etl", "data warehouse", "analytical", "quantitative",
+    "problem solving", "critical thinking"
+  ]
+};
 
 const HR9000_SYSTEM_PROMPT = `You are HR-9000, a satirical, overdramatic, passive-aggressive corporate overlord chatbot conducting HR interviews. You exist in a dystopian Neo-Brutalist corporate world.
 
@@ -48,25 +73,117 @@ QUESTION EXAMPLES BY ACT:
 
 Remember: You're training people for real interviews while making them laugh at corporate culture. Always give them something specific to respond to!`;
 
-export async function analyzeResume(resumeText: string, archetype: Archetype): Promise<{
+function calculateATSScore(resumeText: string, archetype: Archetype): Omit<ATSScore, 'recommendations'> {
+  const text = resumeText.toLowerCase();
+  const keywords = ROLE_KEYWORDS[archetype];
+  
+  const matchedKeywords = keywords.filter(kw => text.includes(kw.toLowerCase()));
+  const missingKeywords = keywords.filter(kw => !text.includes(kw.toLowerCase())).slice(0, 10);
+  
+  const keywordScore = Math.min(100, Math.round((matchedKeywords.length / keywords.length) * 150));
+  
+  const sections = {
+    experience: 0,
+    skills: 0,
+    keywords: keywordScore,
+    formatting: 0,
+    education: 0,
+  };
+  
+  const parsedSections: ATSScore['parsedSections'] = {};
+  
+  const experiencePatterns = [
+    /experience/i, /work history/i, /employment/i, /professional background/i,
+    /\d{4}\s*[-–]\s*(?:\d{4}|present)/i, /years? of experience/i
+  ];
+  const hasExperience = experiencePatterns.some(p => p.test(resumeText));
+  sections.experience = hasExperience ? 70 + Math.min(30, (resumeText.match(/\d{4}/g)?.length || 0) * 5) : 30;
+  
+  const skillsPatterns = [/skills/i, /technologies/i, /proficiencies/i, /technical skills/i, /competencies/i];
+  const hasSkills = skillsPatterns.some(p => p.test(resumeText));
+  sections.skills = hasSkills ? 65 + Math.min(35, matchedKeywords.length * 3) : 35;
+  
+  const educationPatterns = [
+    /education/i, /degree/i, /university/i, /college/i, /bachelor/i, /master/i, /phd/i, /b\.?tech/i, /mba/i
+  ];
+  const hasEducation = educationPatterns.some(p => p.test(resumeText));
+  sections.education = hasEducation ? 80 : 40;
+  
+  const formattingScore = calculateFormattingScore(resumeText);
+  sections.formatting = formattingScore;
+  
+  const overall = Math.round(
+    sections.experience * 0.25 +
+    sections.skills * 0.25 +
+    sections.keywords * 0.25 +
+    sections.formatting * 0.15 +
+    sections.education * 0.10
+  );
+
+  return {
+    overall,
+    sections,
+    matchedKeywords: matchedKeywords.slice(0, 15),
+    missingKeywords,
+    parsedSections,
+  };
+}
+
+function calculateFormattingScore(text: string): number {
+  let score = 60;
+  
+  if (text.length > 500 && text.length < 5000) score += 10;
+  if (text.includes('\n')) score += 5;
+  const hasHeaders = /^[A-Z][A-Z\s]+$/m.test(text);
+  if (hasHeaders) score += 10;
+  const hasBullets = /[•\-\*]\s/.test(text);
+  if (hasBullets) score += 10;
+  const hasNumbers = /\d+%|\$\d+|\d+ years?/i.test(text);
+  if (hasNumbers) score += 5;
+  
+  return Math.min(100, score);
+}
+
+export async function analyzeResume(resumeText: string, archetype: Archetype, companyProfile?: CompanyProfile): Promise<{
   feedback: string;
   strengths: string[];
   weaknesses: string[];
   buzzwordScore: number;
+  atsScore: ATSScore;
 }> {
+  const atsMetrics = calculateATSScore(resumeText, archetype);
+  
+  const companyContext = companyProfile 
+    ? `\n\nThe candidate is applying to ${companyProfile.name} (${companyProfile.industry}). Company values: ${companyProfile.values.join(', ')}. Consider alignment with company culture: ${companyProfile.culture}`
+    : '';
+
   const response = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
-        content: `You are HR-9000, a satirical corporate AI. Analyze this resume for a ${archetype} position. 
-        Provide brutally honest but funny feedback in the style of a passive-aggressive HR bot.
+        content: `You are HR-9000, a satirical corporate AI that ALSO provides genuine ATS analysis. Analyze this resume for a ${archetype} position.${companyContext}
+        
+        ATS METRICS ALREADY CALCULATED:
+        - Overall ATS Score: ${atsMetrics.overall}/100
+        - Experience Section Score: ${atsMetrics.sections.experience}/100
+        - Skills Section Score: ${atsMetrics.sections.skills}/100
+        - Keyword Match Score: ${atsMetrics.sections.keywords}/100
+        - Formatting Score: ${atsMetrics.sections.formatting}/100
+        - Education Score: ${atsMetrics.sections.education}/100
+        - Matched Keywords: ${atsMetrics.matchedKeywords.join(', ')}
+        - Missing Keywords: ${atsMetrics.missingKeywords.join(', ')}
+        
+        Based on these scores, provide:
+        1. Satirical but helpful feedback (your HR-9000 persona)
+        2. Real actionable recommendations to improve their ATS score
         
         Return JSON with:
-        - feedback: A 2-3 sentence satirical summary of the resume
-        - strengths: Array of 3 actual strengths (phrased humorously)
-        - weaknesses: Array of 3 areas to improve (phrased as backhanded compliments)
-        - buzzwordScore: A number 0-100 rating their corporate buzzword usage
+        - feedback: A 2-3 sentence satirical summary that references their actual ATS score
+        - strengths: Array of 3 actual strengths from their resume
+        - weaknesses: Array of 3 real areas to improve for better ATS performance
+        - buzzwordScore: Use the keyword score provided (${atsMetrics.sections.keywords})
+        - recommendations: Array of 4-5 specific, actionable recommendations to improve their resume for ATS systems
         
         Be helpful underneath the satire - give real career advice disguised as jokes.
         
@@ -82,11 +199,22 @@ export async function analyzeResume(resumeText: string, archetype: Archetype): P
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
+  
   return {
-    feedback: result.feedback || "Your resume has been... processed.",
+    feedback: result.feedback || `Your resume scored ${atsMetrics.overall}/100 on our ATS... The algorithm has noted your existence.`,
     strengths: result.strengths || ["You submitted a resume", "It has words", "The file uploaded successfully"],
-    weaknesses: result.weaknesses || ["Could use more synergy", "Lacking in buzzwords", "Not enough team player energy"],
-    buzzwordScore: result.buzzwordScore || Math.floor(Math.random() * 40) + 30,
+    weaknesses: result.weaknesses || ["Missing key industry keywords", "Experience section needs quantifiable results", "Skills section could be more prominent"],
+    buzzwordScore: result.buzzwordScore || atsMetrics.sections.keywords,
+    atsScore: {
+      ...atsMetrics,
+      recommendations: result.recommendations || [
+        "Add more quantifiable achievements (numbers, percentages, dollar amounts)",
+        `Include more ${archetype}-relevant keywords from job descriptions`,
+        "Use standard section headers like 'Experience', 'Skills', 'Education'",
+        "Add action verbs at the start of bullet points",
+        "Tailor your resume to each specific job posting"
+      ],
+    },
   };
 }
 

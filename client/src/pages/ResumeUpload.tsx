@@ -3,12 +3,13 @@ import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/lib/context";
+import type { ATSScore } from "@shared/schema";
 import scannerImg from "@assets/generated_images/chaotic_resume_shredder_and_scanner.png";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 
 export default function ResumeUpload() {
   const [_, setLocation] = useLocation();
-  const { archetype, setResumeText, setResumeAnalysis } = useSession();
+  const { archetype, setResumeText, setResumeAnalysis, companyProfile, targetCompany } = useSession();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -20,6 +21,7 @@ export default function ResumeUpload() {
     strengths: string[];
     weaknesses: string[];
     buzzwordScore: number;
+    atsScore?: ATSScore;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -78,7 +80,8 @@ export default function ResumeUpload() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             resumeText: resumeContent,
-            archetype: archetype || "BTech"
+            archetype: archetype || "BTech",
+            companyProfile: companyProfile || undefined
           })
         });
 
@@ -146,7 +149,7 @@ export default function ResumeUpload() {
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" }
+      transition: { duration: 0.5, ease: "easeOut" as const }
     }
   };
 
@@ -318,43 +321,144 @@ export default function ResumeUpload() {
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    RESUME VERDICT
+                    ATS ANALYSIS REPORT
                   </motion.h2>
-                  <motion.div 
-                    className="inline-block bg-accent border-2 border-black px-4 py-2"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 300, delay: 0.3 }}
-                  >
-                    <span className="font-mono text-sm">BUZZWORD SCORE: </span>
-                    <motion.span 
-                      className="font-bold text-xl"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 }}
+                  
+                  {analysis.atsScore && (
+                    <motion.div 
+                      className="inline-block bg-black text-white border-4 border-secondary px-6 py-4 mt-2"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300, delay: 0.3 }}
                     >
-                      {analysis.buzzwordScore}/100
-                    </motion.span>
-                  </motion.div>
+                      <span className="font-mono text-sm block">OVERALL ATS SCORE</span>
+                      <motion.span 
+                        className="font-display text-5xl"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        data-testid="text-ats-score"
+                      >
+                        {analysis.atsScore.overall}
+                      </motion.span>
+                      <span className="font-display text-2xl text-gray-400">/100</span>
+                    </motion.div>
+                  )}
                 </motion.div>
+
+                {analysis.atsScore && (
+                  <motion.div 
+                    className="bg-gray-50 border-2 border-black p-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <h3 className="font-display text-sm uppercase mb-3 border-b border-black pb-2">Section Breakdown</h3>
+                    <div className="space-y-3">
+                      {[
+                        { key: 'experience', label: 'Experience', color: 'bg-blue-500' },
+                        { key: 'skills', label: 'Skills', color: 'bg-purple-500' },
+                        { key: 'keywords', label: 'Keywords', color: 'bg-secondary' },
+                        { key: 'formatting', label: 'Formatting', color: 'bg-cyan-500' },
+                        { key: 'education', label: 'Education', color: 'bg-green-500' },
+                      ].map((section, i) => {
+                        const score = analysis.atsScore?.sections[section.key as keyof typeof analysis.atsScore.sections] || 0;
+                        return (
+                          <motion.div 
+                            key={section.key}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 + i * 0.1 }}
+                            data-testid={`section-${section.key}`}
+                          >
+                            <div className="flex justify-between text-xs font-mono mb-1">
+                              <span>{section.label}</span>
+                              <span className="font-bold">{score}/100</span>
+                            </div>
+                            <div className="h-3 bg-gray-200 border border-black overflow-hidden">
+                              <motion.div 
+                                className={`h-full ${section.color}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${score}%` }}
+                                transition={{ delay: 0.6 + i * 0.1, duration: 0.5 }}
+                              />
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
 
                 <motion.div 
                   className="bg-gray-100 border-2 border-black p-4"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
+                  transition={{ delay: 0.5 }}
                 >
                   <p className="font-mono text-sm leading-relaxed" data-testid="text-resume-feedback">{analysis.feedback}</p>
                 </motion.div>
 
+                {analysis.atsScore && (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <motion.div 
+                      className="border-2 border-black p-4 bg-green-50"
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">MATCHED KEYWORDS</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {analysis.atsScore.matchedKeywords.slice(0, 10).map((kw, i) => (
+                          <motion.span 
+                            key={i}
+                            className="bg-green-200 border border-black px-2 py-0.5 text-[10px] font-mono uppercase"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.7 + i * 0.05 }}
+                            data-testid={`keyword-matched-${i}`}
+                          >
+                            {kw}
+                          </motion.span>
+                        ))}
+                        {analysis.atsScore.matchedKeywords.length === 0 && (
+                          <span className="text-xs text-gray-500 font-mono">No keywords detected</span>
+                        )}
+                      </div>
+                    </motion.div>
+                    <motion.div 
+                      className="border-2 border-black p-4 bg-red-50"
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">MISSING KEYWORDS</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {analysis.atsScore.missingKeywords.slice(0, 10).map((kw, i) => (
+                          <motion.span 
+                            key={i}
+                            className="bg-red-200 border border-black px-2 py-0.5 text-[10px] font-mono uppercase"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.7 + i * 0.05 }}
+                            data-testid={`keyword-missing-${i}`}
+                          >
+                            {kw}
+                          </motion.span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <motion.div 
-                    className="border-2 border-black p-4 bg-green-50"
+                    className="border-2 border-black p-4 bg-cyan-50"
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
+                    transition={{ delay: 0.7 }}
                   >
-                    <h3 className="font-display text-lg mb-3 border-b-2 border-black pb-2">DETECTED STRENGTHS</h3>
+                    <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">STRENGTHS</h3>
                     <ul className="space-y-2">
                       {analysis.strengths.map((s, i) => (
                         <motion.li 
@@ -363,24 +467,20 @@ export default function ResumeUpload() {
                           data-testid={`text-strength-${i}`}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 + i * 0.1 }}
+                          transition={{ delay: 0.8 + i * 0.1 }}
                         >
-                          <motion.span 
-                            className="text-green-600"
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ delay: 0.7 + i * 0.1 }}
-                          >+</motion.span> {s}
+                          <span className="text-green-600">+</span> {s}
                         </motion.li>
                       ))}
                     </ul>
                   </motion.div>
                   <motion.div 
-                    className="border-2 border-black p-4 bg-red-50"
+                    className="border-2 border-black p-4 bg-orange-50"
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
+                    transition={{ delay: 0.7 }}
                   >
-                    <h3 className="font-display text-lg mb-3 border-b-2 border-black pb-2">AREAS OF CONCERN</h3>
+                    <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">AREAS TO IMPROVE</h3>
                     <ul className="space-y-2">
                       {analysis.weaknesses.map((w, i) => (
                         <motion.li 
@@ -389,25 +489,39 @@ export default function ResumeUpload() {
                           data-testid={`text-weakness-${i}`}
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 + i * 0.1 }}
+                          transition={{ delay: 0.8 + i * 0.1 }}
                         >
-                          <motion.span 
-                            className="text-red-600"
-                            animate={{ 
-                              opacity: [1, 0.5, 1],
-                              scale: [1, 1.1, 1]
-                            }}
-                            transition={{ 
-                              delay: 0.7 + i * 0.1,
-                              duration: 1,
-                              repeat: Infinity
-                            }}
-                          >!</motion.span> {w}
+                          <span className="text-orange-600">!</span> {w}
                         </motion.li>
                       ))}
                     </ul>
                   </motion.div>
                 </div>
+
+                {analysis.atsScore && analysis.atsScore.recommendations.length > 0 && (
+                  <motion.div 
+                    className="border-2 border-black p-4 bg-yellow-50"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                  >
+                    <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">HR-9000 RECOMMENDATIONS</h3>
+                    <ul className="space-y-2">
+                      {analysis.atsScore.recommendations.map((rec, i) => (
+                        <motion.li 
+                          key={i} 
+                          className="font-mono text-xs flex items-start gap-2"
+                          data-testid={`recommendation-${i}`}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.0 + i * 0.1 }}
+                        >
+                          <span className="text-yellow-600 font-bold">{i + 1}.</span> {rec}
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
 
                 <motion.button
                   onClick={handleProceed}
@@ -415,7 +529,7 @@ export default function ResumeUpload() {
                   data-testid="button-proceed-interview"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
+                  transition={{ delay: 1.1 }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
