@@ -1,7 +1,6 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export type Archetype = "MBA" | "BTech" | "Analyst";
 
@@ -45,8 +44,8 @@ export async function analyzeResume(resumeText: string, archetype: Archetype): P
   weaknesses: string[];
   buzzwordScore: number;
 }> {
-  const response = await openai.chat.completions.create({
-    model: "gpt-5",
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
@@ -59,7 +58,9 @@ export async function analyzeResume(resumeText: string, archetype: Archetype): P
         - weaknesses: Array of 3 areas to improve (phrased as backhanded compliments)
         - buzzwordScore: A number 0-100 rating their corporate buzzword usage
         
-        Be helpful underneath the satire - give real career advice disguised as jokes.`
+        Be helpful underneath the satire - give real career advice disguised as jokes.
+        
+        IMPORTANT: Respond ONLY with valid JSON, no additional text.`
       },
       {
         role: "user",
@@ -67,7 +68,7 @@ export async function analyzeResume(resumeText: string, archetype: Archetype): P
       }
     ],
     response_format: { type: "json_object" },
-    max_completion_tokens: 1024,
+    max_tokens: 1024,
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -103,7 +104,7 @@ export async function generateHRResponse(
     Analyst: "This candidate is pursuing an analyst role. Focus on data analysis, Excel skills, presentation abilities, and analytical thinking questions."
   };
 
-  const messages: OpenAI.ChatCompletionMessageParam[] = [
+  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: HR9000_SYSTEM_PROMPT },
     { 
       role: "system", 
@@ -119,7 +120,9 @@ After 2-3 exchanges, consider advancing to the next act.
 In your response JSON:
 - response: Your HR-9000 message
 - shouldAdvanceAct: true if ready to move to next act
-- actTitle: Include the next act title if advancing`
+- actTitle: Include the next act title if advancing
+
+IMPORTANT: Respond ONLY with valid JSON, no additional text.`
     }
   ];
 
@@ -130,11 +133,11 @@ In your response JSON:
     });
   }
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-5",
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
     messages,
     response_format: { type: "json_object" },
-    max_completion_tokens: 512,
+    max_tokens: 512,
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -159,8 +162,8 @@ export async function generateVerdict(
   realAdvice: string;
   interviewTips: string[];
 }> {
-  const response = await openai.chat.completions.create({
-    model: "gpt-5",
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
@@ -182,7 +185,9 @@ Return JSON with:
 - strengths: Array of 3 strengths
 - areasForImprovement: Array of 3 areas to work on
 - realAdvice: One paragraph of genuine, helpful career advice
-- interviewTips: Array of 3 real interview tips phrased satirically`
+- interviewTips: Array of 3 real interview tips phrased satirically
+
+IMPORTANT: Respond ONLY with valid JSON, no additional text.`
       },
       {
         role: "user",
@@ -195,7 +200,7 @@ ${transcript.map(m => `${m.role.toUpperCase()}: ${m.text}`).join("\n")}`
       }
     ],
     response_format: { type: "json_object" },
-    max_completion_tokens: 1024,
+    max_tokens: 1024,
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -212,8 +217,8 @@ ${transcript.map(m => `${m.role.toUpperCase()}: ${m.text}`).join("\n")}`
 }
 
 export async function generateInitialGreeting(archetype: Archetype, resumeSummary?: string): Promise<string> {
-  const response = await openai.chat.completions.create({
-    model: "gpt-5",
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
@@ -229,7 +234,7 @@ export async function generateInitialGreeting(archetype: Archetype, resumeSummar
           : "The candidate didn't submit a resume. Generate the opening with extra judgment."
       }
     ],
-    max_completion_tokens: 256,
+    max_tokens: 256,
   });
 
   return response.choices[0].message.content || 
