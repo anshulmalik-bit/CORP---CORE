@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { SessionProvider } from "@/lib/context";
+import OfflineDetector from "@/components/OfflineDetector";
 
 import Home from "@/pages/Home";
 import PreScreen from "@/pages/PreScreen";
@@ -30,8 +31,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        <Toaster />
-        <Router />
+        <OfflineDetector>
+          <Toaster />
+          <Router />
+        </OfflineDetector>
       </SessionProvider>
     </QueryClientProvider>
   );
