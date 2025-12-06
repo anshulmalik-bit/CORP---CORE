@@ -16,7 +16,7 @@ const ACTS = [
 
 export default function Interview() {
   const [_, setLocation] = useLocation();
-  const { archetype, resumeText, resumeAnalysis, addTranscript, transcript } = useSession();
+  const { archetype, resumeText, resumeAnalysis, addTranscript, transcript, companyProfile, targetCompany } = useSession();
   const [actIndex, setActIndex] = useState(0);
   const [messages, setMessages] = useState<{role: 'hr'|'user', text: string}[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -40,7 +40,8 @@ export default function Interview() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             archetype: archetype || "BTech",
-            resumeSummary: resumeAnalysis?.feedback || (resumeText ? "Resume submitted but not analyzed" : null)
+            resumeSummary: resumeAnalysis?.feedback || (resumeText ? "Resume submitted but not analyzed" : null),
+            companyProfile: companyProfile || undefined
           })
         });
 
@@ -48,10 +49,12 @@ export default function Interview() {
           const { greeting } = await response.json();
           addMessage("hr", greeting);
         } else {
-          addMessage("hr", `Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset! I've been programmed to exploit— I mean, explore your potential as a ${archetype || "Human Resource"}.\n\nSo tell me: Why do you want to sacrifice your weekends for us?`);
+          const companyFallback = targetCompany ? ` at ${targetCompany}` : "";
+          addMessage("hr", `Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset${companyFallback}! I've been programmed to exploit— I mean, explore your potential as a ${archetype || "Human Resource"}.\n\nSo tell me: Why do you want to sacrifice your weekends for us?`);
         }
       } catch (error) {
-        addMessage("hr", `Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset! I've been programmed to exploit— I mean, explore your potential as a ${archetype || "Human Resource"}.\n\nSo tell me: Why do you want to sacrifice your weekends for us?`);
+        const companyFallback = targetCompany ? ` at ${targetCompany}` : "";
+        addMessage("hr", `Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset${companyFallback}! I've been programmed to exploit— I mean, explore your potential as a ${archetype || "Human Resource"}.\n\nSo tell me: Why do you want to sacrifice your weekends for us?`);
       }
       setIsLoading(false);
     };
@@ -112,7 +115,8 @@ export default function Interview() {
           currentAct: actIndex,
           conversationHistory,
           messagesInCurrentAct: currentActExchanges,
-          resumeSummary: resumeAnalysis?.feedback
+          resumeSummary: resumeAnalysis?.feedback,
+          companyProfile: companyProfile || undefined
         })
       });
 

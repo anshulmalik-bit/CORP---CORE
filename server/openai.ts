@@ -153,9 +153,14 @@ export async function analyzeResume(resumeText: string, archetype: Archetype, co
 }> {
   const atsMetrics = calculateATSScore(resumeText, archetype);
   
-  const companyContext = companyProfile 
-    ? `\n\nThe candidate is applying to ${companyProfile.name} (${companyProfile.industry}). Company values: ${companyProfile.values.join(', ')}. Consider alignment with company culture: ${companyProfile.culture}`
-    : '';
+  let companyContext = "";
+  if (companyProfile && companyProfile.name) {
+    const companyName = companyProfile.name;
+    const industry = companyProfile.industry || "Unknown";
+    const values = companyProfile.values?.length > 0 ? companyProfile.values.join(', ') : "Not specified";
+    const culture = companyProfile.culture || "Not specified";
+    companyContext = `\n\nThe candidate is applying to ${companyName} (${industry}). Company values: ${values}. Consider alignment with company culture: ${culture}`;
+  }
 
   const response = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
@@ -223,7 +228,8 @@ export async function generateHRResponse(
   currentAct: number,
   conversationHistory: ChatMessage[],
   resumeSummary?: string,
-  messagesInCurrentAct: number = 0
+  messagesInCurrentAct: number = 0,
+  companyProfile?: CompanyProfile
 ): Promise<{
   response: string;
   shouldAdvanceAct: boolean;
@@ -247,6 +253,31 @@ export async function generateHRResponse(
     ? "You have had 2+ exchanges in this act. It's time to advance to the next act after this response."
     : `You have had ${messagesInCurrentAct} exchange(s) in this act. Ask another question before advancing.`;
 
+  let companyContext = "";
+  if (companyProfile && companyProfile.name) {
+    const companyName = companyProfile.name || "the target company";
+    const industry = companyProfile.industry || "Unknown";
+    const culture = companyProfile.culture || "Not specified";
+    const values = companyProfile.values?.length > 0 ? companyProfile.values.join(", ") : "Not specified";
+    const interviewStyle = companyProfile.interviewStyle || "Standard interview process";
+    const typicalQuestions = companyProfile.typicalQuestions?.length > 0 
+      ? companyProfile.typicalQuestions.slice(0, 5).join("; ") 
+      : "Standard behavioral questions";
+    const recentNews = companyProfile.recentNews || "No recent news available";
+
+    companyContext = `
+COMPANY CONTEXT (use this to personalize questions):
+- Target Company: ${companyName}
+- Industry: ${industry}
+- Company Culture: ${culture}
+- Company Values: ${values}
+- Interview Style: ${interviewStyle}
+- Typical Questions Asked: ${typicalQuestions}
+- Recent News: ${recentNews}
+
+IMPORTANT: Incorporate company-specific context into your questions. Reference ${companyName}'s values, culture, or industry when relevant. If the company has specific typical interview questions, weave them into your questioning style.`;
+  }
+
   const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: HR9000_SYSTEM_PROMPT },
     { 
@@ -257,6 +288,7 @@ export async function generateHRResponse(
 - Current Act: ${actTitles[currentAct]} (Act ${currentAct + 1} of 5)
 - User exchanges in this act: ${messagesInCurrentAct}
 ${resumeSummary ? `- Resume summary: ${resumeSummary}` : ""}
+${companyContext}
 
 ${shouldAdvanceHint}
 
@@ -298,7 +330,8 @@ IMPORTANT: Respond ONLY with valid JSON, no additional text.`
 export async function generateVerdict(
   archetype: Archetype,
   transcript: ChatMessage[],
-  resumeSummary?: string
+  resumeSummary?: string,
+  companyProfile?: CompanyProfile
 ): Promise<{
   score: number;
   verdict: string;
@@ -308,16 +341,35 @@ export async function generateVerdict(
   realAdvice: string;
   interviewTips: string[];
 }> {
+  let companyContext = "";
+  let companyName = "";
+  if (companyProfile && companyProfile.name) {
+    companyName = companyProfile.name;
+    const industry = companyProfile.industry || "Unknown";
+    const culture = companyProfile.culture || "Not specified";
+    const values = companyProfile.values?.length > 0 ? companyProfile.values.join(", ") : "Not specified";
+    const interviewStyle = companyProfile.interviewStyle || "Standard interview process";
+
+    companyContext = `
+TARGET COMPANY: ${companyName} (${industry})
+- Culture: ${culture}
+- Values: ${values}
+- Interview Style: ${interviewStyle}
+
+Make the verdict specific to ${companyName}! Reference their culture, values, and whether the candidate would fit at this specific company.`;
+  }
+
   const response = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
         content: `You are HR-9000 generating a "Corporate Fit Report" after an interview. This is a satirical report that mixes real career advice with dark corporate humor.
+${companyContext}
 
 Create a verdict that:
-1. Has a satirical "Corporate Survival Score" (0-100)
-2. Assigns a funny dystopian corporate title
+1. Has a satirical "Corporate Survival Score" (0-100)${companyName ? ` specifically for ${companyName}` : ""}
+2. Assigns a funny dystopian corporate title${companyName ? ` that references ${companyName} or their industry` : ""}
 3. Lists strengths (real ones, phrased humorously)
 4. Lists areas for improvement (real advice, phrased as corporate jargon)
 5. Provides genuine interview tips disguised as "compliance recommendations"
@@ -326,18 +378,18 @@ The tone should be: 40% actual helpful feedback, 60% satirical corporate dystopi
 
 Return JSON with:
 - score: number 0-100 (be fair based on actual interview performance)
-- verdict: A 2-3 sentence satirical summary
+- verdict: A 2-3 sentence satirical summary${companyName ? ` mentioning ${companyName}` : ""}
 - corporateTitle: A funny made-up corporate title (e.g., "Junior Synergy Catalyst")
 - strengths: Array of 3 strengths
 - areasForImprovement: Array of 3 areas to work on
-- realAdvice: One paragraph of genuine, helpful career advice
+- realAdvice: One paragraph of genuine, helpful career advice${companyName ? ` specific to succeeding at ${companyName}` : ""}
 - interviewTips: Array of 3 real interview tips phrased satirically
 
 IMPORTANT: Respond ONLY with valid JSON, no additional text.`
       },
       {
         role: "user",
-        content: `Generate a Corporate Fit Report for this ${archetype} candidate.
+        content: `Generate a Corporate Fit Report for this ${archetype} candidate${companyName ? ` applying to ${companyName}` : ""}.
         
 Resume Summary: ${resumeSummary || "No resume provided"}
 
@@ -362,17 +414,39 @@ ${transcript.map(m => `${m.role.toUpperCase()}: ${m.text}`).join("\n")}`
   };
 }
 
-export async function generateInitialGreeting(archetype: Archetype, resumeSummary?: string): Promise<string> {
+export async function generateInitialGreeting(archetype: Archetype, resumeSummary?: string, companyProfile?: CompanyProfile): Promise<string> {
+  let companyContext = "";
+  let companyName = "";
+  if (companyProfile && companyProfile.name) {
+    companyName = companyProfile.name;
+    const industry = companyProfile.industry || "Unknown";
+    const culture = companyProfile.culture || "Not specified";
+    const values = companyProfile.values?.length > 0 ? companyProfile.values.join(", ") : "Not specified";
+    const interviewStyle = companyProfile.interviewStyle || "Standard interview process";
+
+    companyContext = `
+    
+TARGET COMPANY: ${companyName}
+- Industry: ${industry}
+- Culture: ${culture}
+- Values: ${values}
+- Interview Style: ${interviewStyle}
+
+IMPORTANT: Mention ${companyName} by name in your greeting! Reference their company culture or values satirically. Make the candidate feel like they're interviewing specifically for ${companyName}.`;
+  }
+
+  const firstValue = companyProfile?.values?.[0] || "excellence";
+
   const response = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
-        content: `You are HR-9000. Generate a dramatic, satirical opening greeting for a ${archetype} interview. 
+        content: `You are HR-9000. Generate a dramatic, satirical opening greeting for a ${archetype} interview.${companyContext}
 
 FORMAT YOUR RESPONSE LIKE THIS:
 1. Start with a system initialization message (e.g., "Initializing HR-9000... Status: JUDGMENTAL")
-2. Give a passive-aggressive welcome (1-2 sentences)
+2. Give a passive-aggressive welcome (1-2 sentences)${companyName ? ` Reference ${companyName} by name and their culture/values.` : ""}
 3. Reference the resume if provided
 4. END WITH A CLEAR OPENING QUESTION that the candidate should answer
 
@@ -383,13 +457,16 @@ Be funny but always give them something specific to respond to!`
       {
         role: "user",
         content: resumeSummary 
-          ? `The candidate submitted a resume. Summary: ${resumeSummary}. Generate the opening with a question.`
-          : "The candidate didn't submit a resume. Generate the opening with extra judgment and a question."
+          ? `The candidate submitted a resume. Summary: ${resumeSummary}.${companyName ? ` They are applying to ${companyName}.` : ""} Generate the opening with a question.`
+          : `The candidate didn't submit a resume.${companyName ? ` They are applying to ${companyName}.` : ""} Generate the opening with extra judgment and a question.`
       }
     ],
-    max_tokens: 300,
+    max_tokens: 350,
   });
 
-  return response.choices[0].message.content || 
-    "Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset! I've been programmed to exploit—I mean, explore your potential. So tell me: Why do you want to work here instead of literally anywhere else that might value your existence?";
+  const defaultGreeting = companyName 
+    ? `Initializing HR-9000... Target: ${companyName}. Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future ${companyName} asset! I've been programmed to exploit—I mean, explore your alignment with their corporate values of "${firstValue}." So tell me: Why do you want to pledge your soul to ${companyName} specifically?`
+    : "Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset! I've been programmed to exploit—I mean, explore your potential. So tell me: Why do you want to work here instead of literally anywhere else that might value your existence?";
+
+  return response.choices[0].message.content || defaultGreeting;
 }

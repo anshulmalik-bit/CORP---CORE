@@ -80,11 +80,11 @@ export async function registerRoutes(
   // Generate initial greeting for interview
   app.post("/api/interview/greeting", async (req, res) => {
     try {
-      const { archetype, resumeSummary } = req.body;
+      const { archetype, resumeSummary, companyProfile } = req.body;
       if (!archetype) {
         return res.status(400).json({ error: "Archetype required" });
       }
-      const greeting = await generateInitialGreeting(archetype as Archetype, resumeSummary);
+      const greeting = await generateInitialGreeting(archetype as Archetype, resumeSummary, companyProfile);
       res.json({ greeting });
     } catch (error: any) {
       console.error("Greeting error:", error);
@@ -95,7 +95,7 @@ export async function registerRoutes(
   // Chat with HR-9000
   app.post("/api/interview/chat", async (req, res) => {
     try {
-      const { archetype, currentAct, conversationHistory, messagesInCurrentAct, resumeSummary } = req.body;
+      const { archetype, currentAct, conversationHistory, messagesInCurrentAct, resumeSummary, companyProfile } = req.body;
       if (!archetype || currentAct === undefined || !conversationHistory) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -104,7 +104,8 @@ export async function registerRoutes(
         currentAct,
         conversationHistory,
         resumeSummary,
-        messagesInCurrentAct || 0
+        messagesInCurrentAct || 0,
+        companyProfile
       );
       res.json(response);
     } catch (error: any) {
@@ -116,11 +117,11 @@ export async function registerRoutes(
   // Generate final verdict
   app.post("/api/interview/verdict", async (req, res) => {
     try {
-      const { archetype, transcript, resumeSummary } = req.body;
+      const { archetype, transcript, resumeSummary, companyProfile } = req.body;
       if (!archetype || !transcript) {
         return res.status(400).json({ error: "Missing required fields" });
       }
-      const verdict = await generateVerdict(archetype as Archetype, transcript, resumeSummary);
+      const verdict = await generateVerdict(archetype as Archetype, transcript, resumeSummary, companyProfile);
       res.json(verdict);
     } catch (error: any) {
       console.error("Verdict error:", error);

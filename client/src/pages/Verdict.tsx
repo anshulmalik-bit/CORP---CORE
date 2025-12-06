@@ -19,7 +19,7 @@ interface VerdictData {
 
 export default function Verdict() {
   const [_, setLocation] = useLocation();
-  const { archetype, transcript, resumeAnalysis, setVerdictData, resetSession } = useSession();
+  const { archetype, transcript, resumeAnalysis, setVerdictData, resetSession, companyProfile, targetCompany } = useSession();
   const [loading, setLoading] = useState(true);
   const [verdict, setVerdict] = useState<VerdictData | null>(null);
 
@@ -37,7 +37,8 @@ export default function Verdict() {
           body: JSON.stringify({
             archetype: archetype || "BTech",
             transcript,
-            resumeSummary: resumeAnalysis?.feedback
+            resumeSummary: resumeAnalysis?.feedback,
+            companyProfile: companyProfile || undefined
           })
         });
 
@@ -145,7 +146,7 @@ export default function Verdict() {
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" }
+      transition: { duration: 0.5, ease: "easeOut" as const }
     }
   };
 
