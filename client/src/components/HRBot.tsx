@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { playSound } from "@/hooks/use-sound";
+import hrBotImg from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
 
 const botMessages = [
   { text: "Have you considered being more passionate about unpaid overtime?", emoji: "🤖" },
@@ -42,10 +44,10 @@ export default function HRBot() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-4 right-4 z-40 w-12 h-12 bg-secondary text-white rounded-full border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center text-xl"
+        className="fixed bottom-4 right-4 z-40 w-12 h-12 bg-secondary rounded-full border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center overflow-hidden"
         data-testid="button-hrbot-expand"
       >
-        🤖
+        <img src={hrBotImg} alt="HR-9000" className="w-8 h-8 object-contain" />
       </motion.button>
     );
   }
@@ -71,13 +73,18 @@ export default function HRBot() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => {
+            playSound('click');
             setIsExpanded(!isExpanded);
             setHasNewMessage(false);
           }}
-          className={`w-14 h-14 ${isExpanded ? 'bg-accent' : 'bg-secondary'} text-white rounded-full border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center text-2xl`}
+          className={`w-14 h-14 ${isExpanded ? 'bg-accent' : 'bg-secondary'} rounded-full border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center overflow-hidden`}
           data-testid="button-hrbot-toggle"
         >
-          <span className={isExpanded ? "" : "animate-bounce"}>🤖</span>
+          <img 
+            src={hrBotImg} 
+            alt="HR-9000" 
+            className={`w-10 h-10 object-contain ${isExpanded ? "" : "animate-bounce"}`}
+          />
         </motion.button>
 
         <AnimatePresence>
@@ -126,8 +133,8 @@ export default function HRBot() {
                 </AnimatePresence>
 
                 <div className="flex gap-3 mb-3">
-                  <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-lg shrink-0">
-                    {botMessages[currentMessage].emoji}
+                  <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                    <img src={hrBotImg} alt="HR-9000" className="w-6 h-6 object-contain" />
                   </div>
                   <div className="bg-gray-100 border-2 border-black p-2 text-sm font-mono relative">
                     <div className="absolute -left-2 top-3 w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-r-4 border-r-black"></div>
@@ -143,7 +150,7 @@ export default function HRBot() {
                         key={reaction}
                         whileHover={{ scale: 1.3 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => handleReaction(reaction)}
+                        onClick={() => { playSound('click'); handleReaction(reaction); }}
                         className="w-7 h-7 hover:bg-gray-100 rounded flex items-center justify-center transition-colors"
                         data-testid={`button-react-${reaction}`}
                       >

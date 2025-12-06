@@ -3,8 +3,10 @@ import { useLocation, Link } from "wouter";
 import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
 import { motion, AnimatePresence } from "framer-motion";
+import { playSound } from "@/hooks/use-sound";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 import stampImg from "@assets/generated_images/neo-brutalist_corporate_processed_stamp.png";
+import hrBotImg from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
 import { useMutation } from "@tanstack/react-query";
 
 interface VerdictData {
@@ -117,18 +119,24 @@ export default function Verdict() {
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 80) return "YOU ATE THAT 💅";
-    if (score >= 60) return "MID BUT FIXABLE";
-    if (score >= 40) return "IT'S GIVING... EFFORT";
-    return "MAYBE TRY NEPOTISM?";
+    if (score >= 80) return "ASSET APPROVED";
+    if (score >= 60) return "CONDITIONAL CLEARANCE";
+    if (score >= 40) return "PROBATIONARY STATUS";
+    return "TERMINATION RECOMMENDED";
   };
 
-  const getScoreEmoji = (score: number) => {
-    if (score >= 80) return "🔥";
-    if (score >= 60) return "😅";
-    if (score >= 40) return "💀";
-    return "🚩";
+  const getScoreStatus = (score: number) => {
+    if (score >= 80) return { status: "OPTIMAL", color: "bg-accent" };
+    if (score >= 60) return { status: "ACCEPTABLE", color: "bg-yellow-400" };
+    if (score >= 40) return { status: "SUBOPTIMAL", color: "bg-orange-500" };
+    return { status: "CRITICAL", color: "bg-destructive" };
   };
+
+  useEffect(() => {
+    if (verdict) {
+      setTimeout(() => playSound('stamp'), 1000);
+    }
+  }, [verdict]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -287,126 +295,188 @@ export default function Verdict() {
               animate="visible"
             >
               <motion.div className="text-center mb-8" variants={itemVariants}>
+                <div className="flex justify-center mb-4">
+                  <motion.div
+                    className="w-20 h-20 bg-black rounded-full border-4 border-secondary flex items-center justify-center overflow-hidden"
+                    animate={{ 
+                      boxShadow: [
+                        "0 0 0px rgba(255,0,255,0)",
+                        "0 0 20px rgba(255,0,255,0.5)",
+                        "0 0 0px rgba(255,0,255,0)"
+                      ]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <img src={hrBotImg} alt="HR-9000" className="w-14 h-14 object-contain" />
+                  </motion.div>
+                </div>
                 <motion.p 
                   className="font-mono text-xs text-gray-500 mb-2"
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  DOCUMENT #HR9000-{Date.now()}
+                  CLASSIFIED DOCUMENT #HR9000-{Math.floor(Math.random() * 999999)}
                 </motion.p>
                 <motion.h1 
-                  className="font-display text-3xl md:text-5xl uppercase mb-4"
+                  className="font-display text-3xl md:text-5xl uppercase mb-4 relative"
                   animate={{ 
                     textShadow: [
                       "0 0 0px transparent",
-                      "3px 3px 0px rgba(255,0,255,0.2)",
+                      "3px 3px 0px rgba(255,0,255,0.3)",
+                      "-2px -2px 0px rgba(0,255,255,0.3)",
                       "0 0 0px transparent"
                     ]
                   }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  transition={{ duration: 3, repeat: Infinity }}
                 >
-                  CORPORATE FIT REPORT
+                  <span className="relative">
+                    CORPORATE FIT REPORT
+                    <motion.span 
+                      className="absolute -top-2 -right-8 text-xs bg-destructive text-white px-1 rotate-12"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      FINAL
+                    </motion.span>
+                  </span>
                 </motion.h1>
-                <motion.div 
-                  className="inline-block bg-black text-white px-4 py-2 font-mono text-sm"
-                  whileHover={{ backgroundColor: "#ff00ff" }}
-                >
-                  {archetype || "UNKNOWN"} TRACK EVALUATION
-                </motion.div>
+                <div className="flex items-center justify-center gap-2">
+                  <motion.div 
+                    className={`inline-block ${getScoreStatus(verdict.score).color} text-black px-3 py-1 font-mono text-xs font-bold`}
+                    animate={{ opacity: [1, 0.7, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    STATUS: {getScoreStatus(verdict.score).status}
+                  </motion.div>
+                  <motion.div 
+                    className="inline-block bg-black text-white px-3 py-1 font-mono text-xs"
+                    whileHover={{ backgroundColor: "#ff00ff" }}
+                  >
+                    {archetype || "UNKNOWN"} TRACK
+                  </motion.div>
+                </div>
               </motion.div>
 
               <motion.div 
-                className="text-center mb-8 p-6 border-4 border-black bg-gradient-to-b from-gray-50 to-gray-100 relative overflow-hidden"
+                className="text-center mb-8 p-6 border-4 border-black bg-black relative overflow-hidden"
                 variants={itemVariants}
               >
+                <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,255,0,0.03)_2px,rgba(0,255,0,0.03)_4px)]"></div>
                 <motion.div 
-                  className="absolute inset-0 opacity-10"
+                  className="absolute top-0 left-0 right-0 h-0.5 bg-accent"
                   animate={{ 
-                    backgroundPosition: ["0% 0%", "100% 100%"]
+                    boxShadow: ["0 0 5px #00ff00", "0 0 20px #00ff00", "0 0 5px #00ff00"]
                   }}
-                  transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
-                >
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#000_10px,#000_11px)]"></div>
-                </motion.div>
-                <p className="font-mono text-sm mb-2 relative">CORPORATE SURVIVAL SCORE</p>
-                <div className="flex items-center justify-center gap-4 relative">
-                  <motion.span 
-                    initial={{ opacity: 0, x: -30, rotate: -180 }}
-                    animate={{ opacity: 1, x: 0, rotate: 0 }}
-                    transition={{ delay: 0.8, type: "spring" }}
-                    className="text-4xl md:text-6xl"
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                <p className="font-mono text-xs mb-3 text-accent relative">▶ SYNERGY QUOTIENT ANALYSIS</p>
+                <div className="relative">
+                  <motion.div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    animate={{ opacity: [0.1, 0.3, 0.1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   >
-                    {getScoreEmoji(verdict.score)}
-                  </motion.span>
+                    <div className="w-32 h-32 md:w-48 md:h-48 border-4 border-accent/30 rounded-full"></div>
+                  </motion.div>
                   <motion.p 
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.6, type: "spring", stiffness: 300 }}
-                    className={`font-display text-7xl md:text-9xl ${getScoreColor(verdict.score)}`}
+                    className={`font-display text-8xl md:text-[10rem] ${getScoreColor(verdict.score)} relative`}
                     data-testid="text-score"
+                    style={{ textShadow: "0 0 30px currentColor" }}
                   >
                     {verdict.score}
                   </motion.p>
-                  <motion.span 
-                    initial={{ opacity: 0, x: 30, rotate: 180 }}
-                    animate={{ opacity: 1, x: 0, rotate: 0 }}
-                    transition={{ delay: 0.8, type: "spring" }}
-                    className="text-4xl md:text-6xl"
-                  >
-                    {getScoreEmoji(verdict.score)}
-                  </motion.span>
                 </div>
-                <motion.p 
+                <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1 }}
-                  className="font-mono text-sm mt-3 uppercase tracking-widest bg-black text-white px-4 py-1 inline-block" 
-                  data-testid="text-score-label"
+                  className="mt-4 relative"
                 >
-                  {getScoreLabel(verdict.score)}
-                </motion.p>
-              </motion.div>
-
-              <motion.div 
-                className="mb-8 p-4 border-2 border-black bg-accent/20"
-                variants={itemVariants}
-                whileHover={{ backgroundColor: "rgba(0,255,0,0.3)" }}
-              >
-                <h3 className="font-display text-lg mb-2">ASSIGNED DESIGNATION:</h3>
-                <motion.p 
-                  className="font-mono text-xl" 
-                  data-testid="text-corporate-title"
+                  <div className="inline-block border-2 border-accent bg-black px-4 py-2">
+                    <p className="font-mono text-xs text-accent mb-1">CLASSIFICATION:</p>
+                    <p 
+                      className="font-display text-lg md:text-xl text-white uppercase tracking-widest" 
+                      data-testid="text-score-label"
+                    >
+                      {getScoreLabel(verdict.score)}
+                    </p>
+                  </div>
+                </motion.div>
+                <motion.div 
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
                   animate={{ 
-                    textShadow: [
-                      "0 0 0px transparent",
-                      "0 0 5px rgba(255,0,255,0.3)",
-                      "0 0 0px transparent"
-                    ]
+                    boxShadow: ["0 0 5px #00ff00", "0 0 20px #00ff00", "0 0 5px #00ff00"]
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {verdict.corporateTitle}
-                </motion.p>
+                />
               </motion.div>
 
               <motion.div 
-                className="mb-8 p-4 border-2 border-black"
+                className="mb-8 p-4 border-4 border-black bg-gradient-to-r from-secondary/20 via-accent/20 to-secondary/20 relative overflow-hidden"
+                variants={itemVariants}
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary via-accent to-secondary"></div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-black rounded border-2 border-secondary flex items-center justify-center shrink-0">
+                    <span className="text-2xl">🏷️</span>
+                  </div>
+                  <div>
+                    <h3 className="font-mono text-xs text-gray-500 uppercase">ASSIGNED CORPORATE DESIGNATION:</h3>
+                    <motion.p 
+                      className="font-display text-xl md:text-2xl uppercase" 
+                      data-testid="text-corporate-title"
+                      animate={{ 
+                        color: ["#000", "#ff00ff", "#000"]
+                      }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                    >
+                      {verdict.corporateTitle}
+                    </motion.p>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                className="mb-8 p-4 border-4 border-black bg-gray-50 relative"
                 variants={itemVariants}
               >
-                <h3 className="font-display text-lg mb-3">HR-9000 ASSESSMENT:</h3>
-                <p className="font-mono text-sm leading-relaxed" data-testid="text-verdict">{verdict.verdict}</p>
+                <div className="absolute -top-3 left-4 bg-secondary text-white px-3 py-1 font-mono text-xs font-bold">
+                  HR-9000 ASSESSMENT
+                </div>
+                <div className="absolute -top-3 right-4 bg-black text-accent px-2 py-1 font-mono text-[10px] animate-pulse">
+                  ● RECORDING
+                </div>
+                <p className="font-mono text-sm leading-relaxed mt-2 italic" data-testid="text-verdict">
+                  "{verdict.verdict}"
+                </p>
+                <div className="mt-3 pt-2 border-t border-gray-300 flex items-center gap-2">
+                  <span className="text-xs font-mono text-gray-400">SENTIMENT:</span>
+                  <span className="text-xs font-mono bg-black text-white px-2 py-0.5">
+                    {verdict.score >= 60 ? "TOLERANT" : "DISAPPOINTED"}
+                  </span>
+                </div>
               </motion.div>
 
               <motion.div 
-                className="grid md:grid-cols-2 gap-6 mb-8"
+                className="grid md:grid-cols-2 gap-4 mb-8"
                 variants={itemVariants}
               >
                 <motion.div 
-                  className="border-2 border-black p-4 bg-green-50"
-                  whileHover={{ scale: 1.02, borderColor: "#00ff00" }}
+                  className="border-4 border-black p-4 bg-black text-white relative overflow-hidden"
+                  whileHover={{ scale: 1.02 }}
                 >
-                  <h3 className="font-display text-lg mb-3 border-b-2 border-black pb-2">DETECTED COMPETENCIES</h3>
-                  <ul className="space-y-2">
+                  <div className="absolute top-0 right-0 bg-accent text-black px-2 py-0.5 text-[10px] font-mono font-bold">
+                    ✓ VERIFIED
+                  </div>
+                  <h3 className="font-display text-lg mb-3 text-accent flex items-center gap-2">
+                    <span className="w-6 h-6 bg-accent text-black flex items-center justify-center text-sm">▲</span>
+                    DETECTED ASSETS
+                  </h3>
+                  <ul className="space-y-3">
                     {verdict.strengths.map((s, i) => (
                       <motion.li 
                         key={i} 
@@ -417,20 +487,27 @@ export default function Verdict() {
                         transition={{ delay: 1.2 + i * 0.1 }}
                       >
                         <motion.span 
-                          className="text-green-600 font-bold"
-                          animate={{ scale: [1, 1.3, 1] }}
-                          transition={{ delay: 1.3 + i * 0.1 }}
-                        >+</motion.span> {s}
+                          className="text-accent font-bold shrink-0 w-5 h-5 border border-accent flex items-center justify-center text-xs"
+                          animate={{ opacity: [1, 0.5, 1] }}
+                          transition={{ delay: 1.3 + i * 0.1, duration: 2, repeat: Infinity }}
+                        >+</motion.span> 
+                        <span className="text-gray-300">{s}</span>
                       </motion.li>
                     ))}
                   </ul>
                 </motion.div>
                 <motion.div 
-                  className="border-2 border-black p-4 bg-orange-50"
-                  whileHover={{ scale: 1.02, borderColor: "#ff8800" }}
+                  className="border-4 border-black p-4 bg-destructive/10 relative overflow-hidden"
+                  whileHover={{ scale: 1.02 }}
                 >
-                  <h3 className="font-display text-lg mb-3 border-b-2 border-black pb-2">OPTIMIZATION TARGETS</h3>
-                  <ul className="space-y-2">
+                  <div className="absolute top-0 right-0 bg-destructive text-white px-2 py-0.5 text-[10px] font-mono font-bold animate-pulse">
+                    ⚠ ACTION REQ
+                  </div>
+                  <h3 className="font-display text-lg mb-3 text-destructive flex items-center gap-2">
+                    <span className="w-6 h-6 bg-destructive text-white flex items-center justify-center text-sm">▼</span>
+                    OPTIMIZATION REQUIRED
+                  </h3>
+                  <ul className="space-y-3">
                     {verdict.areasForImprovement.map((a, i) => (
                       <motion.li 
                         key={i} 
@@ -441,9 +518,8 @@ export default function Verdict() {
                         transition={{ delay: 1.2 + i * 0.1 }}
                       >
                         <motion.span 
-                          className="text-orange-600 font-bold"
+                          className="text-destructive font-bold shrink-0 w-5 h-5 border border-destructive flex items-center justify-center text-xs"
                           animate={{ 
-                            opacity: [1, 0.5, 1],
                             scale: [1, 1.2, 1]
                           }}
                           transition={{ 
@@ -451,7 +527,8 @@ export default function Verdict() {
                             duration: 1,
                             repeat: Infinity
                           }}
-                        >!</motion.span> {a}
+                        >!</motion.span> 
+                        <span>{a}</span>
                       </motion.li>
                     ))}
                   </ul>
@@ -459,40 +536,46 @@ export default function Verdict() {
               </motion.div>
 
               <motion.div 
-                className="mb-8 p-4 border-4 border-black bg-blue-50"
+                className="mb-8 p-5 border-4 border-secondary bg-secondary/5 relative"
                 variants={itemVariants}
-                whileHover={{ borderColor: "#0088ff" }}
+                whileHover={{ borderColor: "#ff00ff" }}
               >
-                <h3 className="font-display text-lg mb-3 flex items-center gap-2">
-                  <motion.span 
-                    className="bg-black text-white px-2 py-1 text-xs"
-                    animate={{ backgroundColor: ["#000", "#ff00ff", "#000"] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >REAL TALK</motion.span>
-                  ACTUAL CAREER ADVICE
-                </h3>
-                <p className="font-mono text-sm leading-relaxed" data-testid="text-real-advice">{verdict.realAdvice}</p>
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-white px-4 py-1 font-mono text-xs font-bold flex items-center gap-2">
+                  <span className="animate-pulse">◉</span> CLASSIFIED: ACTUAL ADVICE <span className="animate-pulse">◉</span>
+                </div>
+                <div className="bg-white border-2 border-black p-4 mt-2">
+                  <p className="font-mono text-sm leading-relaxed" data-testid="text-real-advice">{verdict.realAdvice}</p>
+                </div>
+                <p className="text-[10px] font-mono text-gray-400 mt-2 text-center">
+                  *This section contains non-satirical content. We apologize for the inconvenience.*
+                </p>
               </motion.div>
 
               <motion.div 
-                className="mb-8 p-4 border-2 border-black"
+                className="mb-8 p-4 border-4 border-black bg-gray-900 text-white relative"
                 variants={itemVariants}
               >
-                <h3 className="font-display text-lg mb-3">COMPLIANCE RECOMMENDATIONS (Interview Tips)</h3>
-                <ul className="space-y-2">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent via-secondary to-accent"></div>
+                <h3 className="font-display text-lg mb-4 flex items-center gap-2 text-accent">
+                  <span className="text-xl">📋</span> MANDATORY COMPLIANCE PROTOCOL
+                </h3>
+                <ul className="space-y-3">
                   {verdict.interviewTips.map((tip, i) => (
                     <motion.li 
                       key={i} 
-                      className="font-mono text-sm flex items-start gap-2" 
+                      className="font-mono text-sm flex items-start gap-3 bg-black/50 p-2 border border-gray-700" 
                       data-testid={`text-tip-${i}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.4 + i * 0.1 }}
                     >
                       <motion.span 
-                        className="bg-black text-white px-2 text-xs"
-                        whileHover={{ backgroundColor: "#ff00ff" }}
-                      >{i + 1}</motion.span> {tip}
+                        className="bg-accent text-black px-2 py-1 text-xs font-bold shrink-0"
+                        whileHover={{ backgroundColor: "#ff00ff", color: "#fff" }}
+                      >
+                        TIP-{String(i + 1).padStart(2, '0')}
+                      </motion.span> 
+                      <span className="text-gray-300">{tip}</span>
                     </motion.li>
                   ))}
                 </ul>
@@ -503,41 +586,47 @@ export default function Verdict() {
                 variants={itemVariants}
               >
                 <motion.button
-                  onClick={handleTryAgain}
-                  className="flex-1 bg-secondary text-white text-lg font-display py-4 border-4 border-black hover:bg-black transition-colors uppercase brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                  onClick={() => { playSound('click'); handleTryAgain(); }}
+                  className="flex-1 bg-secondary text-white text-lg font-display py-4 border-4 border-black hover:bg-black transition-colors uppercase brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none flex items-center justify-center gap-2"
                   data-testid="button-try-again"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Submit to Another Evaluation
+                  <span>🔄</span> RESUBMIT FOR EVALUATION
                 </motion.button>
                 <Link href="/history" className="flex-1">
                   <motion.button 
-                    className="w-full bg-accent text-black text-lg font-display py-4 border-4 border-black hover:bg-green-400 transition-colors uppercase brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none" 
+                    onClick={() => playSound('click')}
+                    className="w-full bg-accent text-black text-lg font-display py-4 border-4 border-black hover:bg-green-400 transition-colors uppercase brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none flex items-center justify-center gap-2" 
                     data-testid="button-view-history"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    View Past Failures
+                    <span>📁</span> ACCESS FAILURE ARCHIVE
                   </motion.button>
                 </Link>
               </motion.div>
 
               <motion.div 
-                className="text-center mt-6 space-y-2"
+                className="mt-6 p-3 bg-black/5 border border-black/20"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.8 }}
               >
-                <p className="font-mono text-xs text-gray-400">
-                  This evaluation is final. Appeals will be processed in 3-5 business eternities.
+                <div className="flex items-center justify-center gap-4 mb-2">
+                  <div className="h-px bg-black/30 flex-1"></div>
+                  <span className="text-xs font-mono text-gray-400">END OF TRANSMISSION</span>
+                  <div className="h-px bg-black/30 flex-1"></div>
+                </div>
+                <p className="font-mono text-[10px] text-gray-400 text-center">
+                  This evaluation is final and binding. Appeals will be processed in 3-5 business eternities.
                 </p>
                 <motion.p 
-                  className="font-mono text-[10px] text-gray-300"
-                  animate={{ opacity: [0.3, 0.6, 0.3] }}
+                  className="font-mono text-[10px] text-gray-400 text-center mt-1"
+                  animate={{ opacity: [0.4, 0.8, 0.4] }}
                   transition={{ duration: 3, repeat: Infinity }}
                 >
-                  no thoughts just corporate | slay responsibly | HR is watching 👁️
+                  SURVEILLANCE STATUS: ACTIVE • COMPLIANCE LEVEL: MONITORED • HR-9000 v6.66
                 </motion.p>
               </motion.div>
             </motion.div>

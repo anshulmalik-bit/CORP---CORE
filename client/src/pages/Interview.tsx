@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
 import { motion, AnimatePresence } from "framer-motion";
+import { playSound } from "@/hooks/use-sound";
 import hrAvatar from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 
@@ -79,6 +80,7 @@ export default function Interview() {
 
   useEffect(() => {
     if (actIndex !== prevActIndexRef.current && actIndex > 0) {
+      playSound('glitch');
       setShowActTransition(true);
       const timer = setTimeout(() => setShowActTransition(false), 2000);
       prevActIndexRef.current = actIndex;
@@ -94,6 +96,7 @@ export default function Interview() {
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
     
+    playSound('click');
     const userMessage = inputValue.trim();
     addMessage("user", userMessage);
     setInputValue("");

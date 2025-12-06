@@ -3,8 +3,10 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
+import { playSound } from "@/hooks/use-sound";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 import heroImg from "@assets/generated_images/dystopian_corporate_office_hero_image.png";
+import hrBotImg from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
 
 const chaosTexts = [
   "YOUR EVALUATION BEGINS NOW",
@@ -102,6 +104,7 @@ export default function Home() {
   }, [isHovering, isScanning]);
 
   const handleRitualClick = () => {
+    playSound('boot');
     setIsScanning(true);
     setScanProgress(0);
     setScanMessage(0);
@@ -110,8 +113,12 @@ export default function Home() {
       setScanProgress((prev) => {
         if (prev >= 100) {
           clearInterval(progressInterval);
+          playSound('success');
           setTimeout(() => setLocation("/prescreen"), 300);
           return 100;
+        }
+        if (prev % 20 === 0) {
+          playSound('scan');
         }
         return prev + 4;
       });
@@ -148,7 +155,13 @@ export default function Home() {
                   <div className="text-accent font-mono text-sm mb-4 animate-pulse">
                     {securityMessages[scanMessage]}
                   </div>
-                  <div className="text-6xl mb-4 animate-spin-slow">👁️</div>
+                  <div className="w-16 h-16 mx-auto mb-4">
+                    <img 
+                      src={hrBotImg} 
+                      alt="HR-9000" 
+                      className="w-full h-full object-contain animate-pulse filter hue-rotate-90"
+                    />
+                  </div>
                   <div className="w-full bg-black border-2 border-accent h-6 relative overflow-hidden">
                     <motion.div 
                       className="h-full bg-accent"
@@ -341,7 +354,7 @@ export default function Home() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onMouseEnter={() => setIsHovering(true)}
+          onMouseEnter={() => { setIsHovering(true); playSound('hover'); }}
           onMouseLeave={() => setIsHovering(false)}
           onClick={handleRitualClick}
           disabled={isScanning}
