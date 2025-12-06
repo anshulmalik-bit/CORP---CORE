@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/lib/context";
+import { playSound } from "@/hooks/use-sound";
 import type { ATSScore } from "@shared/schema";
 import scannerImg from "@assets/generated_images/chaotic_resume_shredder_and_scanner.png";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
@@ -52,6 +53,7 @@ export default function ResumeUpload() {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
+      playSound('scan');
       const file = e.target.files[0];
       setUploading(true);
       
@@ -104,17 +106,20 @@ export default function ResumeUpload() {
   };
 
   const handleSkip = () => {
+    playSound('click');
     setResumeText("");
     setResumeAnalysis(null);
     setLocation("/interview");
   };
 
   const handleProceed = () => {
+    playSound('success');
     setLocation("/interview");
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    if (!isDragOver) playSound('hover');
     setIsDragOver(true);
   };
 
@@ -124,6 +129,7 @@ export default function ResumeUpload() {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    playSound('click');
     setIsDragOver(false);
     const files = e.dataTransfer.files;
     if (files.length > 0 && fileInputRef.current) {
@@ -213,7 +219,7 @@ export default function ResumeUpload() {
               >
                 <motion.div 
                   className={`border-2 border-dashed border-black p-12 bg-gray-50 cursor-pointer relative overflow-hidden transition-colors ${isDragOver ? 'bg-secondary/10 border-secondary' : 'hover:bg-gray-100'}`}
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => { playSound('click'); fileInputRef.current?.click(); }}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -290,6 +296,7 @@ export default function ResumeUpload() {
                 </motion.p>
                 <motion.button
                   onClick={handleSkip}
+                  onMouseEnter={() => playSound('hover')}
                   className="text-sm font-mono text-gray-500 hover:text-black underline transition-colors"
                   data-testid="button-skip-resume"
                   whileHover={{ scale: 1.05 }}
@@ -525,6 +532,7 @@ export default function ResumeUpload() {
 
                 <motion.button
                   onClick={handleProceed}
+                  onMouseEnter={() => playSound('hover')}
                   className="w-full bg-secondary text-white font-display text-xl py-4 border-4 border-black hover:bg-black transition-colors uppercase brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                   data-testid="button-proceed-interview"
                   initial={{ opacity: 0, y: 20 }}

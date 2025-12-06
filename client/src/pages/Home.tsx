@@ -6,7 +6,6 @@ import { useSession } from "@/lib/context";
 import { playSound } from "@/hooks/use-sound";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 import heroImg from "@assets/generated_images/dystopian_corporate_office_hero_image.png";
-import hrBotImg from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
 
 const chaosTexts = [
   "YOUR EVALUATION BEGINS NOW",
@@ -31,14 +30,6 @@ const kpiMetrics = [
   { label: "BUZZWORD DENSITY", value: "CRITICAL", trend: "📈" },
 ];
 
-const securityMessages = [
-  "SCANNING BIOMETRICS...",
-  "ANALYZING VIBE CHECK...",
-  "CALCULATING SLAY FACTOR...",
-  "DETECTING RED FLAGS...",
-  "LOADING CORPORATE TRAUMA...",
-];
-
 export default function Home() {
   const [_, setLocation] = useLocation();
   const { resetSession } = useSession();
@@ -47,9 +38,6 @@ export default function Home() {
   const [currentKpi, setCurrentKpi] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [hoverCountdown, setHoverCountdown] = useState(3);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
-  const [scanMessage, setScanMessage] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +75,7 @@ export default function Home() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isHovering && !isScanning) {
+    if (isHovering) {
       interval = setInterval(() => {
         setHoverCountdown((prev) => {
           if (prev <= 1) {
@@ -97,96 +85,21 @@ export default function Home() {
           return prev - 1;
         });
       }, 800);
-    } else if (!isHovering) {
+    } else {
       setHoverCountdown(3);
     }
     return () => clearInterval(interval);
-  }, [isHovering, isScanning]);
+  }, [isHovering]);
 
   const handleRitualClick = () => {
     playSound('boot');
-    setIsScanning(true);
-    setScanProgress(0);
-    setScanMessage(0);
-    
-    const progressInterval = setInterval(() => {
-      setScanProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          playSound('success');
-          setTimeout(() => setLocation("/prescreen"), 300);
-          return 100;
-        }
-        if (prev % 20 === 0) {
-          playSound('scan');
-        }
-        return prev + 4;
-      });
-      setScanMessage((prev) => (prev + 1) % securityMessages.length);
-    }, 80);
+    setLocation("/prescreen");
   };
 
   return (
     <Layout>
       <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay"
            style={{ backgroundImage: `url(${noiseBg})` }}></div>
-
-      {/* Scanning Overlay */}
-      <AnimatePresence>
-        {isScanning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center"
-          >
-            <div className="relative w-80 md:w-96">
-              <div className="border-4 border-accent p-8 bg-black relative overflow-hidden">
-                <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,255,0,0.03)_2px,rgba(0,255,0,0.03)_4px)]"></div>
-                <div 
-                  className="absolute top-0 left-0 right-0 h-1 bg-accent animate-pulse"
-                  style={{ 
-                    boxShadow: '0 0 20px #00ff00, 0 0 40px #00ff00',
-                    transform: `translateY(${scanProgress * 2}px)`
-                  }}
-                ></div>
-                
-                <div className="text-center relative z-10">
-                  <div className="text-accent font-mono text-sm mb-4 animate-pulse">
-                    {securityMessages[scanMessage]}
-                  </div>
-                  <div className="w-16 h-16 mx-auto mb-4">
-                    <img 
-                      src={hrBotImg} 
-                      alt="HR-9000" 
-                      className="w-full h-full object-contain animate-pulse filter hue-rotate-90"
-                    />
-                  </div>
-                  <div className="w-full bg-black border-2 border-accent h-6 relative overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-accent"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${scanProgress}%` }}
-                      transition={{ duration: 0.1 }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold mix-blend-difference text-white">
-                      {scanProgress}% COMPLETE
-                    </div>
-                  </div>
-                  <div className="mt-4 text-xs font-mono text-gray-500">
-                    CLEARANCE LEVEL: INTERN
-                  </div>
-                </div>
-              </div>
-              
-              <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-accent"></div>
-              <div className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-accent"></div>
-              <div className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-accent"></div>
-              <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-accent"></div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div ref={containerRef} className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[80vh] text-center relative z-10">
         
@@ -357,8 +270,7 @@ export default function Home() {
           onMouseEnter={() => { setIsHovering(true); playSound('hover'); }}
           onMouseLeave={() => setIsHovering(false)}
           onClick={handleRitualClick}
-          disabled={isScanning}
-          className="bg-secondary text-white text-xl md:text-3xl lg:text-4xl font-display px-8 md:px-12 py-4 md:py-6 border-4 border-black brutalist-shadow-lg hover:brutalist-shadow active:translate-y-2 active:shadow-none transition-all uppercase relative overflow-hidden group disabled:opacity-50"
+          className="bg-secondary text-white text-xl md:text-3xl lg:text-4xl font-display px-8 md:px-12 py-4 md:py-6 border-4 border-black brutalist-shadow-lg hover:brutalist-shadow active:translate-y-2 active:shadow-none transition-all uppercase relative overflow-hidden group"
           data-testid="button-start"
         >
           {/* Background pulse effect */}

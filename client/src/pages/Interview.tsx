@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
 import { motion, AnimatePresence } from "framer-motion";
 import { playSound } from "@/hooks/use-sound";
-import hrAvatar from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
+import hrAvatar from "@assets/generated_images/retro_corporate_hr_robot_head.png";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 
 const ACTS = [

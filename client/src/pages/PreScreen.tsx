@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
 import { motion, AnimatePresence } from "framer-motion";
+import { playSound } from "@/hooks/use-sound";
 import type { CompanyProfile } from "@shared/schema";
 
 const lines = [
@@ -73,6 +74,7 @@ export default function PreScreen() {
   }, []);
 
   const handleSelect = (type: "MBA" | "BTech" | "Analyst") => {
+    playSound('click');
     setSelectedArchetype(type);
     setArchetype(type);
     setShowOptions(false);
@@ -80,6 +82,7 @@ export default function PreScreen() {
   };
 
   const handleCompanySubmit = async () => {
+    playSound('click');
     const trimmedName = companyName.trim();
     
     if (!trimmedName) {
@@ -124,6 +127,7 @@ export default function PreScreen() {
   };
 
   const handleSkipCompany = () => {
+    playSound('click');
     setTargetCompany("");
     setCompanyProfile(null);
     setLocation("/resume");
@@ -275,7 +279,7 @@ export default function PreScreen() {
                   key={opt.id}
                   variants={cardVariants}
                   onClick={() => handleSelect(opt.id as "MBA" | "BTech" | "Analyst")}
-                  onMouseEnter={() => setHoveredCard(opt.id)}
+                  onMouseEnter={() => { setHoveredCard(opt.id); playSound('hover'); }}
                   onMouseLeave={() => setHoveredCard(null)}
                   className={`${opt.color} p-4 md:p-6 border-4 border-black text-left font-mono shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all relative overflow-hidden group`}
                   data-testid={`button-archetype-${opt.id}`}
@@ -402,6 +406,7 @@ export default function PreScreen() {
                         className="w-full p-4 border-4 border-black font-mono text-lg focus:outline-none focus:ring-4 focus:ring-secondary/50 placeholder:text-gray-400"
                         data-testid="input-company-name"
                         onKeyDown={(e) => e.key === 'Enter' && handleCompanySubmit()}
+                        onFocus={() => playSound('click')}
                       />
                       <motion.div 
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-2xl"
@@ -415,6 +420,7 @@ export default function PreScreen() {
                     <div className="flex gap-3">
                       <motion.button
                         onClick={handleCompanySubmit}
+                        onMouseEnter={() => playSound('hover')}
                         className="flex-1 bg-secondary text-white font-display text-lg py-3 border-4 border-black hover:bg-black transition-colors uppercase brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                         data-testid="button-research-company"
                         whileHover={{ scale: 1.02 }}
@@ -426,6 +432,7 @@ export default function PreScreen() {
 
                     <motion.button
                       onClick={handleSkipCompany}
+                      onMouseEnter={() => playSound('hover')}
                       className="w-full text-sm font-mono text-gray-500 hover:text-black underline transition-colors"
                       data-testid="button-skip-company"
                       whileHover={{ scale: 1.02 }}

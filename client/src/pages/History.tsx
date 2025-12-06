@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import Layout from "@/components/Layout";
 import { motion, AnimatePresence } from "framer-motion";
+import { playSound } from "@/hooks/use-sound";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 
 interface InterviewSession {
@@ -108,6 +109,7 @@ export default function History() {
               data-testid="button-new-ritual"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => playSound('click')}
             >
               NEW RITUAL
             </motion.button>
@@ -153,6 +155,7 @@ export default function History() {
                   variants={cardVariants}
                   className="border-4 border-black bg-white p-6 brutalist-shadow relative overflow-hidden group hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
                   data-testid={`card-session-${session.id}`}
+                  onMouseEnter={() => playSound('hover')}
                   whileHover={{ 
                     borderColor: "#ff00ff",
                     transition: { duration: 0.2 }
@@ -283,7 +286,7 @@ export default function History() {
             </motion.p>
             <p className="font-mono text-sm mb-6">You haven't been evaluated by the system.</p>
             <motion.button
-              onClick={() => setLocation("/")}
+              onClick={() => { playSound('click'); setLocation("/"); }}
               className="bg-primary text-white font-bold px-8 py-4 border-2 border-black brutalist-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all uppercase"
               data-testid="button-start-first-ritual"
               whileHover={{ scale: 1.05 }}

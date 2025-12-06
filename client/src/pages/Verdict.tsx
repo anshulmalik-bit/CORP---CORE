@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { playSound } from "@/hooks/use-sound";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
 import stampImg from "@assets/generated_images/neo-brutalist_corporate_processed_stamp.png";
-import hrBotImg from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
+import hrBotImg from "@assets/generated_images/retro_corporate_hr_robot_head.png";
 import { useMutation } from "@tanstack/react-query";
 
 interface VerdictData {

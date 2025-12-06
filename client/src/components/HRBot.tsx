@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playSound } from "@/hooks/use-sound";
-import hrBotImg from "@assets/generated_images/glitchy_3d_mannequin_head_for_hr_bot.png";
+import hrBotImg from "@assets/generated_images/retro_corporate_hr_robot_head.png";
 
 const botMessages = [
   { text: "Have you considered being more passionate about unpaid overtime?", emoji: "🤖" },
