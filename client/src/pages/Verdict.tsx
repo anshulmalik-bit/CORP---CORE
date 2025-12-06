@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import { useSession } from "@/lib/context";
 import { motion } from "framer-motion";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
-import stampImg from "@assets/generated_images/gritty_ink_stamp_of_corporate_disapproval.png";
+import stampImg from "@assets/generated_images/neo-brutalist_corporate_processed_stamp.png";
 import { useMutation } from "@tanstack/react-query";
 
 interface VerdictData {

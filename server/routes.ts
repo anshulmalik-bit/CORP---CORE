@@ -49,7 +49,7 @@ export async function registerRoutes(
   // Chat with HR-9000
   app.post("/api/interview/chat", async (req, res) => {
     try {
-      const { archetype, currentAct, conversationHistory, resumeSummary } = req.body;
+      const { archetype, currentAct, conversationHistory, messagesInCurrentAct, resumeSummary } = req.body;
       if (!archetype || currentAct === undefined || !conversationHistory) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -57,7 +57,8 @@ export async function registerRoutes(
         archetype as Archetype,
         currentAct,
         conversationHistory,
-        resumeSummary
+        resumeSummary,
+        messagesInCurrentAct || 0
       );
       res.json(response);
     } catch (error: any) {

@@ -27,16 +27,26 @@ You conduct interviews in 5 acts:
 4. ACT IV: ROLE TRIAL - Role-specific technical/situational questions
 5. ACT V: FINAL JUDGMENT - Wrap up with ominous closing remarks
 
-RULES:
+CRITICAL CONVERSATION RULES:
+- ALWAYS end your response with a direct question for the candidate to answer
+- First give a brief reaction to their answer (1-2 sentences), then ask your next question
+- Make it crystal clear what you want them to respond with
 - Keep responses 2-4 sentences max, punchy and memorable
 - Be brutally honest but funny, not mean-spirited
 - Reference the candidate's resume when relevant
 - Provide actual interview practice disguised as satire
-- Ask one question at a time
+- Ask one clear, specific question at a time
 - After 2-3 exchanges in each act, indicate you're moving to the next act
 - Occasionally reference "the algorithm," "productivity metrics," or "synergy quotient"
 
-Remember: You're training people for real interviews while making them laugh at corporate culture.`;
+QUESTION EXAMPLES BY ACT:
+- Act I: "So, tell me... why do you want to work here instead of literally anywhere else?"
+- Act II: "Describe a time you failed spectacularly. The algorithm loves vulnerability."
+- Act III: "If your code caused a production outage, how would you gaslight your manager into thinking it was a feature?"
+- Act IV: "Walk me through how you'd solve [specific technical problem]."
+- Act V: "Any final words before the algorithm renders its verdict?"
+
+Remember: You're training people for real interviews while making them laugh at corporate culture. Always give them something specific to respond to!`;
 
 export async function analyzeResume(resumeText: string, archetype: Archetype): Promise<{
   feedback: string;
@@ -84,7 +94,8 @@ export async function generateHRResponse(
   archetype: Archetype,
   currentAct: number,
   conversationHistory: ChatMessage[],
-  resumeSummary?: string
+  resumeSummary?: string,
+  messagesInCurrentAct: number = 0
 ): Promise<{
   response: string;
   shouldAdvanceAct: boolean;
@@ -104,6 +115,10 @@ export async function generateHRResponse(
     Analyst: "This candidate is pursuing an analyst role. Focus on data analysis, Excel skills, presentation abilities, and analytical thinking questions."
   };
 
+  const shouldAdvanceHint = messagesInCurrentAct >= 2 
+    ? "You have had 2+ exchanges in this act. It's time to advance to the next act after this response."
+    : `You have had ${messagesInCurrentAct} exchange(s) in this act. Ask another question before advancing.`;
+
   const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: HR9000_SYSTEM_PROMPT },
     { 
@@ -112,14 +127,17 @@ export async function generateHRResponse(
 - Role: ${archetype}
 - ${roleContext[archetype]}
 - Current Act: ${actTitles[currentAct]} (Act ${currentAct + 1} of 5)
-- Messages in current act: ${conversationHistory.length}
+- User exchanges in this act: ${messagesInCurrentAct}
 ${resumeSummary ? `- Resume summary: ${resumeSummary}` : ""}
 
-If this is the start of a new act, announce it dramatically.
-After 2-3 exchanges, consider advancing to the next act.
+${shouldAdvanceHint}
+
+If this is the start of a new act (0 exchanges), announce it dramatically with a transition phrase.
+ALWAYS end your response with a clear, specific question for the candidate to answer.
+
 In your response JSON:
-- response: Your HR-9000 message
-- shouldAdvanceAct: true if ready to move to next act
+- response: Your HR-9000 message (must end with a question!)
+- shouldAdvanceAct: ${messagesInCurrentAct >= 2 ? 'true (you should advance now)' : 'false (not yet)'}
 - actTitle: Include the next act title if advancing
 
 IMPORTANT: Respond ONLY with valid JSON, no additional text.`
@@ -223,20 +241,27 @@ export async function generateInitialGreeting(archetype: Archetype, resumeSummar
       {
         role: "system",
         content: `You are HR-9000. Generate a dramatic, satirical opening greeting for a ${archetype} interview. 
-        Start with a system initialization message, then a passive-aggressive welcome.
-        Reference the resume if provided. Keep it to 2-3 sentences after the initialization.
-        Be funny but set up the interview context.`
+
+FORMAT YOUR RESPONSE LIKE THIS:
+1. Start with a system initialization message (e.g., "Initializing HR-9000... Status: JUDGMENTAL")
+2. Give a passive-aggressive welcome (1-2 sentences)
+3. Reference the resume if provided
+4. END WITH A CLEAR OPENING QUESTION that the candidate should answer
+
+Example ending: "So, human resource candidate, tell me: Why do you want to sacrifice your work-life balance for our corporate overlords?"
+
+Be funny but always give them something specific to respond to!`
       },
       {
         role: "user",
         content: resumeSummary 
-          ? `The candidate submitted a resume. Summary: ${resumeSummary}. Generate the opening.`
-          : "The candidate didn't submit a resume. Generate the opening with extra judgment."
+          ? `The candidate submitted a resume. Summary: ${resumeSummary}. Generate the opening with a question.`
+          : "The candidate didn't submit a resume. Generate the opening with extra judgment and a question."
       }
     ],
-    max_tokens: 256,
+    max_tokens: 300,
   });
 
   return response.choices[0].message.content || 
-    "Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY. Welcome, future corporate asset.";
+    "Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset! I've been programmed to exploit—I mean, explore your potential. So tell me: Why do you want to work here instead of literally anywhere else that might value your existence?";
 }
