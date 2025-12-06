@@ -237,4 +237,101 @@
   .cursed-cursor {
     cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='48' viewport='0 0 100 100' style='fill:black;font-size:24px;'><text y='50%'>💀</text></svg>") 16 0, auto;
   }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .cyber-grid {
+    background-image: 
+      linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .neon-border {
+    box-shadow: 
+      0 0 5px var(--color-accent),
+      0 0 10px var(--color-accent),
+      inset 0 0 5px var(--color-accent);
+  }
+
+  .glitch-overlay {
+    animation: glitch-overlay 0.3s infinite;
+  }
+
+  @keyframes glitch-overlay {
+    0%, 100% { opacity: 0; }
+    10% { opacity: 0.1; transform: translate(-2px, 1px); }
+    20% { opacity: 0; }
+    30% { opacity: 0.05; transform: translate(1px, -1px); }
+    40%, 100% { opacity: 0; }
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 5px var(--color-secondary); }
+    50% { box-shadow: 0 0 20px var(--color-secondary), 0 0 30px var(--color-secondary); }
+  }
+
+  .typewriter {
+    overflow: hidden;
+    border-right: 2px solid var(--color-accent);
+    animation: typewriter-cursor 0.7s step-end infinite;
+  }
+
+  @keyframes typewriter-cursor {
+    0%, 100% { border-color: var(--color-accent); }
+    50% { border-color: transparent; }
+  }
+
+  .scanline {
+    position: relative;
+  }
+
+  .scanline::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(to right, transparent, var(--color-accent), transparent);
+    animation: scanline-move 2s linear infinite;
+    opacity: 0.5;
+  }
+
+  @keyframes scanline-move {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+
+  .text-shadow-glow {
+    text-shadow: 
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 40px currentColor;
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
 }
