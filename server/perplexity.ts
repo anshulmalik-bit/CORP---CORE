@@ -1,6 +1,8 @@
 import type { CompanyProfile } from "@shared/schema";
+import Groq from "groq-sdk";
 
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 interface PerplexityMessage {
   role: "system" | "user" | "assistant";
@@ -121,7 +123,7 @@ IMPORTANT: Respond ONLY with valid JSON, no additional text or markdown.`;
     };
   } catch (error: any) {
     console.error("Company research error:", error);
-    
+
     return {
       name: companyName,
       industry: "Unknown",
@@ -142,6 +144,73 @@ IMPORTANT: Respond ONLY with valid JSON, no additional text or markdown.`;
       recentNews: "Unable to retrieve recent news",
       sources: [],
     };
+  }
+}
+
+// Groq-based company research fallback (uses training data, not real-time)
+export async function researchCompanyWithGroq(companyName: string): Promise<CompanyProfile> {
+  const systemPrompt = `You are a corporate research assistant. Use your knowledge to provide information about "${companyName}" for interview preparation.
+
+IMPORTANT: Your knowledge has a cutoff date, so some information may not be current. Focus on well-established facts about the company.
+
+Return a JSON object with the following structure:
+{
+  "name": "Official company name",
+  "industry": "Primary industry/sector",
+  "overview": "2-3 sentence company description",
+  "history": "Brief history including founding, major milestones, notable acquisitions",
+  "financialSituation": "General financial status based on your knowledge (mention this may be outdated)",
+  "futurePlans": "Known strategic initiatives or general industry direction",
+  "culture": "Known company culture traits, work environment reputation",
+  "interviewStyle": "What their interview process is typically like based on known information",
+  "typicalQuestions": ["Array of 5-7 typical interview questions for this company"],
+  "values": ["Array of 3-5 core company values"],
+  "recentNews": "Note that real-time news is not available - provide general context instead"
+}
+
+Be honest about limitations - if you don't have reliable information about something, say so.
+IMPORTANT: Respond ONLY with valid JSON, no additional text or markdown.`;
+
+  const userPrompt = `Provide interview preparation information about "${companyName}". Include what you know about their history, culture, interview process, and common interview questions. Be accurate based on your training data.`;
+
+  try {
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 2048,
+      temperature: 0.3,
+    });
+
+    const content = response.choices[0]?.message?.content || "{}";
+    const parsed = JSON.parse(content);
+
+    return {
+      name: parsed.name || companyName,
+      industry: parsed.industry || "Unknown",
+      overview: parsed.overview || `Information about ${companyName} based on available knowledge.`,
+      history: parsed.history || "Historical information not available in training data",
+      financialSituation: parsed.financialSituation || "Financial information may be outdated",
+      futurePlans: parsed.futurePlans || "Strategic plans based on general industry trends",
+      culture: parsed.culture || "Culture information not available",
+      interviewStyle: parsed.interviewStyle || "Standard multi-round interview process expected",
+      typicalQuestions: parsed.typicalQuestions || [
+        "Tell me about yourself",
+        "Why do you want to work here?",
+        "What are your strengths and weaknesses?",
+        "Describe a challenging situation you faced",
+        "Where do you see yourself in 5 years?"
+      ],
+      values: parsed.values || ["Excellence", "Innovation", "Collaboration"],
+      recentNews: "Real-time news not available - using knowledge base data",
+      sources: ["Groq AI Knowledge Base (may not reflect latest information)"],
+    };
+  } catch (error: any) {
+    console.error("Groq company research error:", error);
+    throw error;
   }
 }
 

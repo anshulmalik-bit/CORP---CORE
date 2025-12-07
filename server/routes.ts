@@ -3,20 +3,20 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertInterviewSessionSchema, type CompanyProfile } from "@shared/schema";
 import { fromError } from "zod-validation-error";
-import { 
-  analyzeResume, 
-  generateHRResponse, 
-  generateVerdict, 
+import {
+  analyzeResume,
+  generateHRResponse,
+  generateVerdict,
   generateInitialGreeting,
-  type Archetype 
+  type Archetype
 } from "./openai";
-import { researchCompany, isPerplexityConfigured } from "./perplexity";
+import { researchCompany, researchCompanyWithGroq, isPerplexityConfigured } from "./perplexity";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  
+
   app.get("/api/company/status", async (req, res) => {
     res.json({ configured: isPerplexityConfigured() });
   });
@@ -27,35 +27,17 @@ export async function registerRoutes(
       if (!companyName) {
         return res.status(400).json({ error: "Company name is required" });
       }
-      
-      if (!isPerplexityConfigured()) {
-        return res.status(503).json({ 
-          error: "Company research service not configured",
-          fallback: true,
-          profile: {
-            name: companyName,
-            industry: "Unknown",
-            overview: `Research for ${companyName} requires additional configuration. Proceeding with general interview preparation.`,
-            history: "Company history not available",
-            financialSituation: "Financial information not available",
-            futurePlans: "Strategic plans not available",
-            culture: "Company culture information not available",
-            interviewStyle: "Standard multi-round interview process expected",
-            typicalQuestions: [
-              "Tell me about yourself",
-              "Why do you want to work here?",
-              "What are your strengths and weaknesses?",
-              "Describe a challenging situation you faced",
-              "Where do you see yourself in 5 years?"
-            ],
-            values: ["Excellence", "Innovation", "Collaboration"],
-            recentNews: "Recent news not available",
-            sources: []
-          } as CompanyProfile
-        });
+
+      let profile: CompanyProfile;
+
+      if (isPerplexityConfigured()) {
+        // Use Perplexity for real-time research
+        profile = await researchCompany(companyName);
+      } else {
+        // Use Groq fallback (based on training data)
+        console.log(`Using Groq fallback for company research: ${companyName}`);
+        profile = await researchCompanyWithGroq(companyName);
       }
-      
-      const profile = await researchCompany(companyName);
       res.json({ profile });
     } catch (error: any) {
       console.error("Company research error:", error);
