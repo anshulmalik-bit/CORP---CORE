@@ -76,12 +76,12 @@ Remember: You're training people for real interviews while making them laugh at 
 function calculateATSScore(resumeText: string, archetype: Archetype): Omit<ATSScore, 'recommendations'> {
   const text = resumeText.toLowerCase();
   const keywords = ROLE_KEYWORDS[archetype];
-  
+
   const matchedKeywords = keywords.filter(kw => text.includes(kw.toLowerCase()));
   const missingKeywords = keywords.filter(kw => !text.includes(kw.toLowerCase())).slice(0, 10);
-  
+
   const keywordScore = Math.min(100, Math.round((matchedKeywords.length / keywords.length) * 150));
-  
+
   const sections = {
     experience: 0,
     skills: 0,
@@ -89,29 +89,29 @@ function calculateATSScore(resumeText: string, archetype: Archetype): Omit<ATSSc
     formatting: 0,
     education: 0,
   };
-  
+
   const parsedSections: ATSScore['parsedSections'] = {};
-  
+
   const experiencePatterns = [
     /experience/i, /work history/i, /employment/i, /professional background/i,
     /\d{4}\s*[-–]\s*(?:\d{4}|present)/i, /years? of experience/i
   ];
   const hasExperience = experiencePatterns.some(p => p.test(resumeText));
   sections.experience = hasExperience ? 70 + Math.min(30, (resumeText.match(/\d{4}/g)?.length || 0) * 5) : 30;
-  
+
   const skillsPatterns = [/skills/i, /technologies/i, /proficiencies/i, /technical skills/i, /competencies/i];
   const hasSkills = skillsPatterns.some(p => p.test(resumeText));
   sections.skills = hasSkills ? 65 + Math.min(35, matchedKeywords.length * 3) : 35;
-  
+
   const educationPatterns = [
     /education/i, /degree/i, /university/i, /college/i, /bachelor/i, /master/i, /phd/i, /b\.?tech/i, /mba/i
   ];
   const hasEducation = educationPatterns.some(p => p.test(resumeText));
   sections.education = hasEducation ? 80 : 40;
-  
+
   const formattingScore = calculateFormattingScore(resumeText);
   sections.formatting = formattingScore;
-  
+
   const overall = Math.round(
     sections.experience * 0.25 +
     sections.skills * 0.25 +
@@ -131,7 +131,7 @@ function calculateATSScore(resumeText: string, archetype: Archetype): Omit<ATSSc
 
 function calculateFormattingScore(text: string): number {
   let score = 60;
-  
+
   if (text.length > 500 && text.length < 5000) score += 10;
   if (text.includes('\n')) score += 5;
   const hasHeaders = /^[A-Z][A-Z\s]+$/m.test(text);
@@ -140,7 +140,7 @@ function calculateFormattingScore(text: string): number {
   if (hasBullets) score += 10;
   const hasNumbers = /\d+%|\$\d+|\d+ years?/i.test(text);
   if (hasNumbers) score += 5;
-  
+
   return Math.min(100, score);
 }
 
@@ -152,7 +152,7 @@ export async function analyzeResume(resumeText: string, archetype: Archetype, co
   atsScore: ATSScore;
 }> {
   const atsMetrics = calculateATSScore(resumeText, archetype);
-  
+
   let companyContext = "";
   if (companyProfile && companyProfile.name) {
     const companyName = companyProfile.name;
@@ -200,11 +200,11 @@ export async function analyzeResume(resumeText: string, archetype: Archetype, co
       }
     ],
     response_format: { type: "json_object" },
-    max_tokens: 1024,
+    max_tokens: 2048,
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
-  
+
   return {
     feedback: result.feedback || `Your resume scored ${atsMetrics.overall}/100 on our ATS... The algorithm has noted your existence.`,
     strengths: result.strengths || ["You submitted a resume", "It has words", "The file uploaded successfully"],
@@ -237,7 +237,7 @@ export async function generateHRResponse(
 }> {
   const actTitles = [
     "ACT I: THE ICEBREAKER",
-    "ACT II: BEHAVIORAL DEEP DIVE", 
+    "ACT II: BEHAVIORAL DEEP DIVE",
     "ACT III: CHAOS MODE",
     "ACT IV: ROLE TRIAL",
     "ACT V: FINAL JUDGMENT"
@@ -249,7 +249,7 @@ export async function generateHRResponse(
     Analyst: "This candidate is pursuing an analyst role. Focus on data analysis, Excel skills, presentation abilities, and analytical thinking questions."
   };
 
-  const shouldAdvanceHint = messagesInCurrentAct >= 2 
+  const shouldAdvanceHint = messagesInCurrentAct >= 2
     ? "You have had 2+ exchanges in this act. It's time to advance to the next act after this response."
     : `You have had ${messagesInCurrentAct} exchange(s) in this act. Ask another question before advancing.`;
 
@@ -260,8 +260,8 @@ export async function generateHRResponse(
     const culture = companyProfile.culture || "Not specified";
     const values = companyProfile.values?.length > 0 ? companyProfile.values.join(", ") : "Not specified";
     const interviewStyle = companyProfile.interviewStyle || "Standard interview process";
-    const typicalQuestions = companyProfile.typicalQuestions?.length > 0 
-      ? companyProfile.typicalQuestions.slice(0, 5).join("; ") 
+    const typicalQuestions = companyProfile.typicalQuestions?.length > 0
+      ? companyProfile.typicalQuestions.slice(0, 5).join("; ")
       : "Standard behavioral questions";
     const recentNews = companyProfile.recentNews || "No recent news available";
 
@@ -280,8 +280,8 @@ IMPORTANT: Incorporate company-specific context into your questions. Reference $
 
   const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: HR9000_SYSTEM_PROMPT },
-    { 
-      role: "system", 
+    {
+      role: "system",
       content: `Current interview context:
 - Role: ${archetype}
 - ${roleContext[archetype]}
@@ -319,7 +319,7 @@ IMPORTANT: Respond ONLY with valid JSON, no additional text.`
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
-  
+
   return {
     response: result.response || "System error... just like your career trajectory.",
     shouldAdvanceAct: result.shouldAdvanceAct || false,
@@ -402,7 +402,7 @@ ${transcript.map(m => `${m.role.toUpperCase()}: ${m.text}`).join("\n")}`
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
-  
+
   return {
     score: Math.min(100, Math.max(0, result.score || 50)),
     verdict: result.verdict || "Your existence has been acknowledged by the system.",
@@ -456,7 +456,7 @@ Be funny but always give them something specific to respond to!`
       },
       {
         role: "user",
-        content: resumeSummary 
+        content: resumeSummary
           ? `The candidate submitted a resume. Summary: ${resumeSummary}.${companyName ? ` They are applying to ${companyName}.` : ""} Generate the opening with a question.`
           : `The candidate didn't submit a resume.${companyName ? ` They are applying to ${companyName}.` : ""} Generate the opening with extra judgment and a question.`
       }
@@ -464,7 +464,7 @@ Be funny but always give them something specific to respond to!`
     max_tokens: 350,
   });
 
-  const defaultGreeting = companyName 
+  const defaultGreeting = companyName
     ? `Initializing HR-9000... Target: ${companyName}. Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future ${companyName} asset! I've been programmed to exploit—I mean, explore your alignment with their corporate values of "${firstValue}." So tell me: Why do you want to pledge your soul to ${companyName} specifically?`
     : "Initializing HR-9000... Connectivity: UNSTABLE. Enthusiasm: MANDATORY.\n\nWelcome, future corporate asset! I've been programmed to exploit—I mean, explore your potential. So tell me: Why do you want to work here instead of literally anywhere else that might value your existence?";
 
