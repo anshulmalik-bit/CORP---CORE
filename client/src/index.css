@@ -334,4 +334,93 @@
     transform: translateY(-4px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   }
+
+  /* Mobile-first responsive utilities */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-area-all {
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  }
+
+  /* Touch-friendly minimum targets (44x44px) */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .touch-target-lg {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Mobile viewport height fix (accounts for mobile browser chrome) */
+  .mobile-vh {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .mobile-vh-full {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Keyboard-aware container */
+  .keyboard-aware {
+    height: 100%;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+}
+
+/* Reduced motion for accessibility and performance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    display: none;
+  }
+
+  .vhs-effect::before,
+  .scanline::after {
+    display: none;
+  }
+}
+
+/* Mobile-specific performance optimizations */
+@media (max-width: 768px) {
+  .glitch-text::before,
+  .glitch-text::after {
+    display: none;
+  }
+
+  .vhs-effect::before {
+    display: none;
+  }
+
+  .brutalist-shadow-lg {
+    box-shadow: 4px 4px 0px 0px var(--color-foreground);
+  }
+
+  .brutalist-shadow {
+    box-shadow: 3px 3px 0px 0px var(--color-foreground);
+  }
+
+  /* Improve text readability on small screens */
+  .font-mono {
+    font-size: max(12px, 1em);
+  }
 }

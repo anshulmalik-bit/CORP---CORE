@@ -181,7 +181,7 @@ export default function Interview() {
 
   return (
     <Layout>
-      <div className={`flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto w-full border-x-4 border-black bg-gray-100 relative overflow-hidden transition-all duration-500`}>
+      <div className={`flex flex-col h-[calc(100dvh-120px)] md:h-[calc(100vh-120px)] max-w-4xl mx-auto w-full border-x-4 md:border-x-4 border-x-0 border-black bg-gray-100 relative overflow-hidden transition-all duration-500`}>
 
         <div className="absolute inset-0 opacity-5 pointer-events-none mix-blend-multiply"
           style={{ backgroundImage: `url(${noiseBg})` }}></div>
@@ -395,7 +395,7 @@ export default function Interview() {
             <motion.button
               onClick={handleSend}
               disabled={isTyping || isLoading || !inputValue.trim()}
-              className="bg-accent text-black font-bold px-8 border-2 border-black hover:bg-green-400 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-accent text-black font-bold px-4 md:px-8 border-2 border-black hover:bg-green-400 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-target"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               data-testid="button-send"

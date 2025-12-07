@@ -96,7 +96,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* FOOTER - More Gen-Z */}
-      <footer className="border-t-4 border-black bg-white p-4 relative overflow-hidden group">
+      <footer className="border-t-4 border-black bg-white p-4 relative overflow-hidden group safe-area-bottom">
         <div className="absolute inset-0 opacity-5 pointer-events-none">
           <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#000_10px,#000_11px)]"></div>
         </div>

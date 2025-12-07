@@ -99,20 +99,20 @@ export default function Home() {
   return (
     <Layout>
       <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay"
-           style={{ backgroundImage: `url(${noiseBg})` }}></div>
+        style={{ backgroundImage: `url(${noiseBg})` }}></div>
 
       <div ref={containerRef} className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[80vh] text-center relative z-10">
-        
+
         {/* Floating badges with parallax */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: mousePos.x * 2 }}
           className="absolute top-4 left-4 bg-destructive text-white px-3 py-1 text-xs font-bold rotate-[-5deg] hidden md:block shadow-lg"
         >
           🔥 HOT MESS ALERT
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: mousePos.x * -2 }}
           className="absolute top-4 right-4 bg-accent text-black px-3 py-1 text-xs font-bold rotate-[5deg] hidden md:block shadow-lg"
@@ -161,8 +161,8 @@ export default function Home() {
             </AnimatePresence>
           </div>
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 md:mb-8"
@@ -182,23 +182,23 @@ export default function Home() {
           style={{ transform: `perspective(1000px) rotateX(${mousePos.y * 0.5}deg) rotateY(${mousePos.x * 0.5}deg)` }}
           className="mb-6 md:mb-8 w-full max-w-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-black overflow-hidden relative group"
         >
-          <img 
-            src={heroImg} 
-            alt="Dystopian Corporate Office" 
+          <img
+            src={heroImg}
+            alt="Dystopian Corporate Office"
             className="w-full h-48 md:h-80 object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 grayscale group-hover:grayscale-0 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
           <div className="absolute inset-0 bg-secondary/20 mix-blend-overlay pointer-events-none group-hover:bg-accent/20 transition-colors duration-700"></div>
-          
+
           {/* Scan lines overlay */}
           <div className="absolute inset-0 pointer-events-none opacity-30 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.3)_2px,rgba(0,0,0,0.3)_4px)]"></div>
-          
+
           {/* Corner brackets */}
           <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-accent"></div>
           <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-accent"></div>
           <div className="absolute bottom-12 left-2 w-6 h-6 border-b-2 border-l-2 border-accent"></div>
           <div className="absolute bottom-12 right-2 w-6 h-6 border-b-2 border-r-2 border-accent"></div>
-          
+
           {/* Overlay badges */}
           <div className="absolute top-2 left-10 bg-destructive text-white px-2 py-1 font-mono text-[10px] animate-pulse flex items-center gap-1">
             <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
@@ -215,7 +215,7 @@ export default function Home() {
           </div>
         </motion.div>
 
-        <motion.h1 
+        <motion.h1
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -241,7 +241,7 @@ export default function Home() {
           </AnimatePresence>
         </motion.h1>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
@@ -269,19 +269,21 @@ export default function Home() {
           whileTap={{ scale: 0.95 }}
           onMouseEnter={() => { setIsHovering(true); playSound('hover'); }}
           onMouseLeave={() => setIsHovering(false)}
+          onTouchStart={() => { setIsHovering(true); playSound('hover'); }}
+          onTouchEnd={() => setIsHovering(false)}
           onClick={handleRitualClick}
-          className="bg-secondary text-white text-xl md:text-3xl lg:text-4xl font-display px-8 md:px-12 py-4 md:py-6 border-4 border-black brutalist-shadow-lg hover:brutalist-shadow active:translate-y-2 active:shadow-none transition-all uppercase relative overflow-hidden group"
+          className="bg-secondary text-white text-xl md:text-3xl lg:text-4xl font-display px-6 md:px-12 py-4 md:py-6 border-4 border-black brutalist-shadow-lg hover:brutalist-shadow active:translate-y-2 active:shadow-none transition-all uppercase relative overflow-hidden group touch-target-lg"
           data-testid="button-start"
         >
           {/* Background pulse effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-secondary via-pink-500 to-secondary bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]"></div>
-          
+
           {/* Original text */}
           <span className={`relative z-10 flex items-center gap-3 transition-all duration-300 ${isHovering ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}`}>
             <span>INITIATE RITUAL</span>
             <span className="text-2xl md:text-3xl">🚀</span>
           </span>
-          
+
           {/* Hover state with countdown */}
           <div className={`absolute inset-0 bg-accent transition-transform duration-300 ${isHovering ? 'translate-y-0' : 'translate-y-full'}`}></div>
           <span className={`absolute inset-0 flex items-center justify-center text-black font-display transition-all duration-300 ${isHovering ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
@@ -297,7 +299,7 @@ export default function Home() {
               </span>
             )}
           </span>
-          
+
           {/* Glitch corners on hover */}
           {isHovering && (
             <>
@@ -310,7 +312,7 @@ export default function Home() {
         </motion.button>
 
         {/* Fun stats */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -322,7 +324,7 @@ export default function Home() {
             { label: "Coffee", value: "CRITICAL", emoji: "☕" },
             { label: "Salary", value: "LMAO", emoji: "💸" },
           ].map((stat, i) => (
-            <motion.div 
+            <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -339,7 +341,7 @@ export default function Home() {
         </motion.div>
 
         {/* Rotating warning */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
