@@ -63,10 +63,32 @@ export default function ResumeUpload() {
     }
   };
 
+  const extractTextFromWord = async (file: File): Promise<string> => {
+    try {
+      const mammoth = await import('mammoth');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value.trim() || "Word document content could not be extracted.";
+    } catch (error) {
+      console.error("Word extraction error:", error);
+      return "Word document extraction failed. Please try uploading a TXT file instead.";
+    }
+  };
+
   const extractTextFromFile = async (file: File): Promise<string> => {
+    const fileName = file.name.toLowerCase();
+
     // Handle PDF files with pdf.js
-    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
       return extractTextFromPdf(file);
+    }
+
+    // Handle Word documents with mammoth
+    if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      file.type === 'application/msword' ||
+      fileName.endsWith('.docx') ||
+      fileName.endsWith('.doc')) {
+      return extractTextFromWord(file);
     }
 
     // Handle text files and other formats
@@ -75,7 +97,7 @@ export default function ResumeUpload() {
       reader.onload = (e) => {
         const text = e.target?.result as string;
         // Check if the text looks like binary/corrupted data
-        if (text && text.includes('%PDF') || text.includes('endobj')) {
+        if (text && (text.includes('%PDF') || text.includes('endobj'))) {
           resolve("This appears to be a PDF file. Please ensure you're uploading a valid PDF or try a TXT file.");
         }
         resolve(text || "Resume content could not be extracted. Candidate appears to be a mystery.");
