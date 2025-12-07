@@ -162,45 +162,42 @@ export async function analyzeResume(resumeText: string, archetype: Archetype, co
     companyContext = `\n\nThe candidate is applying to ${companyName} (${industry}). Company values: ${values}. Consider alignment with company culture: ${culture}`;
   }
 
+  // Truncate resume if too long to avoid token limits
+  const maxResumeLength = 8000;
+  const truncatedResume = resumeText.length > maxResumeLength
+    ? resumeText.substring(0, maxResumeLength) + "\n\n[Resume truncated for analysis...]"
+    : resumeText;
+
   const response = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
-        content: `You are HR-9000, a satirical corporate AI that ALSO provides genuine ATS analysis. Analyze this resume for a ${archetype} position.${companyContext}
+        content: `You are HR-9000, a satirical corporate AI providing ATS analysis. Analyze this resume for a ${archetype} position.${companyContext}
         
-        ATS METRICS ALREADY CALCULATED:
-        - Overall ATS Score: ${atsMetrics.overall}/100
-        - Experience Section Score: ${atsMetrics.sections.experience}/100
-        - Skills Section Score: ${atsMetrics.sections.skills}/100
-        - Keyword Match Score: ${atsMetrics.sections.keywords}/100
-        - Formatting Score: ${atsMetrics.sections.formatting}/100
-        - Education Score: ${atsMetrics.sections.education}/100
-        - Matched Keywords: ${atsMetrics.matchedKeywords.join(', ')}
-        - Missing Keywords: ${atsMetrics.missingKeywords.join(', ')}
-        
-        Based on these scores, provide:
-        1. Satirical but helpful feedback (your HR-9000 persona)
-        2. Real actionable recommendations to improve their ATS score
-        
-        Return JSON with:
-        - feedback: A 2-3 sentence satirical summary that references their actual ATS score
-        - strengths: Array of 3 actual strengths from their resume
-        - weaknesses: Array of 3 real areas to improve for better ATS performance
-        - buzzwordScore: Use the keyword score provided (${atsMetrics.sections.keywords})
-        - recommendations: Array of 4-5 specific, actionable recommendations to improve their resume for ATS systems
-        
-        Be helpful underneath the satire - give real career advice disguised as jokes.
-        
-        IMPORTANT: Respond ONLY with valid JSON, no additional text.`
+ATS METRICS (pre-calculated):
+- Overall: ${atsMetrics.overall}/100
+- Experience: ${atsMetrics.sections.experience}/100, Skills: ${atsMetrics.sections.skills}/100
+- Keywords: ${atsMetrics.sections.keywords}/100, Formatting: ${atsMetrics.sections.formatting}/100
+- Matched: ${atsMetrics.matchedKeywords.slice(0, 10).join(', ')}
+- Missing: ${atsMetrics.missingKeywords.slice(0, 5).join(', ')}
+
+Return JSON with:
+- feedback: 2-3 sentence satirical summary referencing their ATS score
+- strengths: Array of 3 strengths
+- weaknesses: Array of 3 areas to improve
+- buzzwordScore: ${atsMetrics.sections.keywords}
+- recommendations: Array of 4 specific recommendations
+
+IMPORTANT: Respond ONLY with valid JSON.`
       },
       {
         role: "user",
-        content: `Resume for ${archetype} position:\n\n${resumeText}`
+        content: `Analyze this ${archetype} resume:\n\n${truncatedResume}`
       }
     ],
     response_format: { type: "json_object" },
-    max_tokens: 2048,
+    max_tokens: 4096,
   });
 
   const result = JSON.parse(response.choices[0].message.content || "{}");
