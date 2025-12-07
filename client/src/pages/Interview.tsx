@@ -19,7 +19,7 @@ export default function Interview() {
   const [_, setLocation] = useLocation();
   const { archetype, resumeText, resumeAnalysis, addTranscript, transcript, companyProfile, targetCompany } = useSession();
   const [actIndex, setActIndex] = useState(0);
-  const [messages, setMessages] = useState<{role: 'hr'|'user', text: string}[]>([]);
+  const [messages, setMessages] = useState<{ role: 'hr' | 'user', text: string }[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function Interview() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             archetype: archetype || "BTech",
-            resumeSummary: resumeAnalysis?.feedback || (resumeText ? "Resume submitted but not analyzed" : null),
+            resumeSummary: resumeText ? resumeText.substring(0, 2000) : (resumeAnalysis?.feedback || null),
             companyProfile: companyProfile || undefined
           })
         });
@@ -88,14 +88,14 @@ export default function Interview() {
     }
   }, [actIndex]);
 
-  const addMessage = (role: 'hr'|'user', text: string) => {
+  const addMessage = (role: 'hr' | 'user', text: string) => {
     setMessages(prev => [...prev, { role, text }]);
     addTranscript(role, text);
   };
 
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
-    
+
     playSound('click');
     const userMessage = inputValue.trim();
     addMessage("user", userMessage);
@@ -109,7 +109,7 @@ export default function Interview() {
 
     try {
       const conversationHistory = [...messages, { role: "user" as const, text: userMessage }];
-      
+
       const response = await fetch("/api/interview/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,7 +118,7 @@ export default function Interview() {
           currentAct: actIndex,
           conversationHistory,
           messagesInCurrentAct: currentActExchanges,
-          resumeSummary: resumeAnalysis?.feedback,
+          resumeSummary: resumeText ? resumeText.substring(0, 2000) : resumeAnalysis?.feedback,
           companyProfile: companyProfile || undefined
         })
       });
@@ -127,7 +127,7 @@ export default function Interview() {
         const data = await response.json();
         setIsTyping(false);
         addMessage("hr", data.response);
-        
+
         if (data.shouldAdvanceAct) {
           if (actIndex < ACTS.length - 1) {
             setActIndex(prev => prev + 1);
@@ -141,9 +141,9 @@ export default function Interview() {
     } catch (error) {
       console.error("Chat error:", error);
       setIsTyping(false);
-      
+
       const shouldAdvance = currentActExchanges >= 2;
-      
+
       const fallbackResponses = [
         "System glitch detected... much like your career trajectory. Tell me more about your experience with handling unexpected challenges?",
         "My algorithms are processing... Interesting. What would you say is your biggest weakness that isn't actually a strength in disguise?",
@@ -151,7 +151,7 @@ export default function Interview() {
         "Connectivity unstable. Moving on... If you were a productivity metric, which one would you be and why?",
         "Processing... The algorithm wants to know: How do you handle criticism from people less qualified than you?",
       ];
-      
+
       if (shouldAdvance) {
         if (actIndex < ACTS.length - 1) {
           addMessage("hr", `${fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]}\n\n*Static crackle* Actually, let's move to ${ACTS[actIndex + 1].title}...`);
@@ -182,11 +182,11 @@ export default function Interview() {
   return (
     <Layout>
       <div className={`flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto w-full border-x-4 border-black bg-gray-100 relative overflow-hidden transition-all duration-500`}>
-        
-        <div className="absolute inset-0 opacity-5 pointer-events-none mix-blend-multiply"
-           style={{ backgroundImage: `url(${noiseBg})` }}></div>
 
-        <motion.div 
+        <div className="absolute inset-0 opacity-5 pointer-events-none mix-blend-multiply"
+          style={{ backgroundImage: `url(${noiseBg})` }}></div>
+
+        <motion.div
           className={`absolute inset-0 bg-gradient-to-br ${currentAct.color} pointer-events-none transition-all duration-700`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -207,7 +207,7 @@ export default function Interview() {
                 exit={{ y: -50, opacity: 0 }}
                 className="text-center"
               >
-                <motion.span 
+                <motion.span
                   className="text-6xl block mb-4"
                   animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.5 }}
@@ -234,7 +234,7 @@ export default function Interview() {
               className="relative z-10"
             >
               <div className="flex items-center justify-center gap-2">
-                <motion.span 
+                <motion.span
                   className="text-xl"
                   animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
@@ -242,7 +242,7 @@ export default function Interview() {
                   {currentAct.emoji}
                 </motion.span>
                 <span>{currentAct.title}</span>
-                <motion.span 
+                <motion.span
                   className="text-xl"
                   animate={{ rotate: [0, -5, 5, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
@@ -253,16 +253,15 @@ export default function Interview() {
               <p className="text-[10px] font-mono text-gray-400 mt-1">({currentAct.vibe})</p>
             </motion.div>
           </AnimatePresence>
-          
+
           <div className="flex justify-center gap-2 mt-2">
             {ACTS.map((act, idx) => (
               <motion.div
                 key={act.id}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  idx < actIndex ? 'bg-accent w-6' : 
-                  idx === actIndex ? 'bg-secondary w-8' : 
-                  'bg-gray-600 w-4'
-                }`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${idx < actIndex ? 'bg-accent w-6' :
+                  idx === actIndex ? 'bg-secondary w-8' :
+                    'bg-gray-600 w-4'
+                  }`}
                 initial={false}
                 animate={{
                   scale: idx === actIndex ? [1, 1.1, 1] : 1,
@@ -275,12 +274,12 @@ export default function Interview() {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6 relative z-10" ref={scrollRef}>
           {isLoading && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex items-center gap-2 text-muted-foreground font-mono text-sm"
             >
-              <motion.div 
+              <motion.div
                 className="w-3 h-3 bg-secondary"
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -288,29 +287,29 @@ export default function Interview() {
               HR-9000 is booting up...
             </motion.div>
           )}
-          
+
           <AnimatePresence>
             {messages.map((msg, idx) => (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ 
+                transition={{
                   type: "spring",
                   stiffness: 500,
                   damping: 30,
                   delay: 0.05
                 }}
-                key={idx} 
+                key={idx}
                 className={`flex ${msg.role === 'hr' ? 'justify-start' : 'justify-end'}`}
               >
-                <motion.div 
+                <motion.div
                   className={`max-w-[85%] flex gap-3 ${msg.role === 'hr' ? 'flex-row' : 'flex-row-reverse'}`}
                   whileHover={{ scale: 1.01 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
                   {msg.role === 'hr' && (
-                    <motion.div 
+                    <motion.div
                       className="w-12 h-12 shrink-0 border-2 border-black overflow-hidden bg-green-200"
                       initial={{ rotate: -10, scale: 0.8 }}
                       animate={{ rotate: 0, scale: 1 }}
@@ -319,11 +318,10 @@ export default function Interview() {
                       <img src={hrAvatar} alt="HR-9000" className="w-full h-full object-cover" />
                     </motion.div>
                   )}
-                  <div className={`p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${
-                    msg.role === 'hr' 
-                      ? `bg-white text-black` 
-                      : 'bg-secondary text-white'
-                  }`}>
+                  <div className={`p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${msg.role === 'hr'
+                    ? `bg-white text-black`
+                    : 'bg-secondary text-white'
+                    }`}>
                     {msg.role === 'hr' && (
                       <p className="font-display text-xs mb-2 opacity-60">HR-9000</p>
                     )}
@@ -335,10 +333,10 @@ export default function Interview() {
               </motion.div>
             ))}
           </AnimatePresence>
-          
+
           <AnimatePresence>
             {isTyping && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -347,13 +345,13 @@ export default function Interview() {
                 <div className="bg-white border-2 border-black p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                   <div className="flex gap-1.5">
                     {[0, 1, 2].map(i => (
-                      <motion.span 
+                      <motion.span
                         key={i}
                         className="w-2.5 h-2.5 bg-black rounded-full"
                         animate={{ y: [0, -8, 0] }}
-                        transition={{ 
-                          repeat: Infinity, 
-                          duration: 0.6, 
+                        transition={{
+                          repeat: Infinity,
+                          duration: 0.6,
                           delay: i * 0.15,
                           ease: "easeInOut"
                         }}
@@ -394,7 +392,7 @@ export default function Interview() {
               disabled={isTyping || isLoading}
               data-testid="input-chat"
             />
-            <motion.button 
+            <motion.button
               onClick={handleSend}
               disabled={isTyping || isLoading || !inputValue.trim()}
               className="bg-accent text-black font-bold px-8 border-2 border-black hover:bg-green-400 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -405,18 +403,17 @@ export default function Interview() {
               SUBMIT
             </motion.button>
           </div>
-          
+
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-4 text-xs font-mono text-gray-400">
               <span className="flex items-center gap-1">
-                <motion.span 
-                  className={`w-2 h-2 rounded-full ${
-                    actIndex === 0 ? 'bg-blue-400' :
+                <motion.span
+                  className={`w-2 h-2 rounded-full ${actIndex === 0 ? 'bg-blue-400' :
                     actIndex === 1 ? 'bg-purple-400' :
-                    actIndex === 2 ? 'bg-red-400' :
-                    actIndex === 3 ? 'bg-amber-400' :
-                    'bg-gray-600'
-                  }`}
+                      actIndex === 2 ? 'bg-red-400' :
+                        actIndex === 3 ? 'bg-amber-400' :
+                          'bg-gray-600'
+                    }`}
                   animate={{ scale: [1, 1.3, 1] }}
                   transition={{ repeat: Infinity, duration: 1.5 }}
                 />
@@ -427,7 +424,7 @@ export default function Interview() {
               <span className="hidden md:inline">•</span>
               <span className="hidden md:inline">{userMessageCount} responses given</span>
             </div>
-            
+
             {canEndInterview && (
               <motion.button
                 initial={{ opacity: 0, x: 20 }}
