@@ -7,6 +7,10 @@ import { playSound } from "@/hooks/use-sound";
 import type { ATSScore } from "@shared/schema";
 import scannerImg from "@assets/generated_images/chaotic_resume_shredder_and_scanner.png";
 import noiseBg from "@assets/generated_images/digital_noise_texture_for_background.png";
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export default function ResumeUpload() {
   const [_, setLocation] = useLocation();
@@ -37,11 +41,43 @@ export default function ResumeUpload() {
     "Calibrating disappointment levels..."
   ];
 
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        fullText += pageText + '\n';
+      }
+
+      return fullText.trim() || "PDF content could not be extracted. The document may be image-based.";
+    } catch (error) {
+      console.error("PDF extraction error:", error);
+      return "PDF extraction failed. Please try uploading a text-based PDF or a TXT file.";
+    }
+  };
+
   const extractTextFromFile = async (file: File): Promise<string> => {
+    // Handle PDF files with pdf.js
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      return extractTextFromPdf(file);
+    }
+
+    // Handle text files and other formats
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = e.target?.result as string;
+        // Check if the text looks like binary/corrupted data
+        if (text && text.includes('%PDF') || text.includes('endobj')) {
+          resolve("This appears to be a PDF file. Please ensure you're uploading a valid PDF or try a TXT file.");
+        }
         resolve(text || "Resume content could not be extracted. Candidate appears to be a mystery.");
       };
       reader.onerror = () => {
@@ -56,7 +92,7 @@ export default function ResumeUpload() {
       playSound('scan');
       const file = e.target.files[0];
       setUploading(true);
-      
+
       let prog = 0;
       const interval = setInterval(() => {
         prog += Math.random() * 8;
@@ -152,8 +188,8 @@ export default function ResumeUpload() {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.5, ease: "easeOut" as const }
     }
@@ -161,26 +197,26 @@ export default function ResumeUpload() {
 
   return (
     <Layout>
-      <motion.div 
+      <motion.div
         className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay"
         style={{ backgroundImage: `url(${noiseBg})` }}
         animate={{ opacity: [0.08, 0.12, 0.08] }}
         transition={{ duration: 3, repeat: Infinity }}
       />
 
-      <motion.div 
+      <motion.div
         className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[80vh] relative z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <motion.h1 
+        <motion.h1
           className="text-4xl md:text-6xl font-display uppercase mb-12 text-center"
           variants={itemVariants}
         >
-          SUBMIT YOUR <motion.span 
+          SUBMIT YOUR <motion.span
             className="text-secondary bg-black px-2 inline-block"
-            animate={{ 
+            animate={{
               skewX: [-1, 1, -1],
               textShadow: [
                 "2px 2px 0 rgba(255,0,255,0.3)",
@@ -193,9 +229,9 @@ export default function ResumeUpload() {
         </motion.h1>
 
         <motion.div className="w-full max-w-xl relative" variants={itemVariants}>
-          <motion.div 
+          <motion.div
             className="absolute -inset-20 opacity-20 pointer-events-none mix-blend-multiply z-0"
-            animate={{ 
+            animate={{
               rotate: [0, 1, -1, 0],
               scale: [1, 1.02, 0.98, 1]
             }}
@@ -204,20 +240,20 @@ export default function ResumeUpload() {
             <img src={scannerImg} alt="" className="w-full h-full object-contain opacity-50 blur-sm" />
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="border-4 border-black bg-white p-8 md:p-12 text-center brutalist-shadow-lg relative z-10"
             whileHover={{ boxShadow: "12px 12px 0 0 #000" }}
             transition={{ duration: 0.2 }}
           >
-            
+
             {!uploading && !showAnalysis ? (
-              <motion.div 
+              <motion.div
                 className="space-y-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <motion.div 
+                <motion.div
                   className={`border-2 border-dashed border-black p-12 bg-gray-50 cursor-pointer relative overflow-hidden transition-colors ${isDragOver ? 'bg-secondary/10 border-secondary' : 'hover:bg-gray-100'}`}
                   onClick={() => { playSound('click'); fileInputRef.current?.click(); }}
                   onDragOver={handleDragOver}
@@ -247,15 +283,15 @@ export default function ResumeUpload() {
                       />
                     )}
                   </AnimatePresence>
-                  <input 
+                  <input
                     ref={fileInputRef}
-                    type="file" 
+                    type="file"
                     accept=".txt,.pdf,.doc,.docx"
                     onChange={handleUpload}
                     className="hidden"
                     data-testid="input-resume"
                   />
-                  <motion.p 
+                  <motion.p
                     className="font-mono text-xl relative z-10"
                     animate={isDragOver ? { scale: [1, 1.05, 1] } : {}}
                     transition={{ duration: 0.3, repeat: Infinity }}
@@ -263,8 +299,8 @@ export default function ResumeUpload() {
                     {isDragOver ? "RELEASE TO SUBMIT" : "DROP RESUME HERE"}
                   </motion.p>
                   <p className="text-xs mt-2 text-muted-foreground relative z-10">(TXT files work best for AI analysis)</p>
-                  
-                  <motion.div 
+
+                  <motion.div
                     className="absolute bottom-2 left-2 right-2 flex justify-center gap-1"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 0.3 }}
@@ -273,11 +309,11 @@ export default function ResumeUpload() {
                       <motion.div
                         key={i}
                         className="w-1 h-1 bg-black rounded-full"
-                        animate={{ 
+                        animate={{
                           y: [0, -3, 0],
                           opacity: [0.3, 0.6, 0.3]
                         }}
-                        transition={{ 
+                        transition={{
                           duration: 1.5,
                           repeat: Infinity,
                           delay: i * 0.1
@@ -286,7 +322,7 @@ export default function ResumeUpload() {
                     ))}
                   </motion.div>
                 </motion.div>
-                <motion.p 
+                <motion.p
                   className="font-weird text-sm"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -306,20 +342,20 @@ export default function ResumeUpload() {
                 </motion.button>
               </motion.div>
             ) : showAnalysis && analysis ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="space-y-6 text-left"
               >
-                <motion.div 
+                <motion.div
                   className="text-center mb-6"
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <motion.h2 
+                  <motion.h2
                     className="font-display text-2xl uppercase mb-2"
-                    animate={{ 
+                    animate={{
                       textShadow: [
                         "0 0 0px transparent",
                         "0 0 10px rgba(255,0,255,0.5)",
@@ -330,16 +366,16 @@ export default function ResumeUpload() {
                   >
                     ATS ANALYSIS REPORT
                   </motion.h2>
-                  
+
                   {analysis.atsScore && (
-                    <motion.div 
+                    <motion.div
                       className="inline-block bg-black text-white border-4 border-secondary px-6 py-4 mt-2"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 300, delay: 0.3 }}
                     >
                       <span className="font-mono text-sm block">OVERALL ATS SCORE</span>
-                      <motion.span 
+                      <motion.span
                         className="font-display text-5xl"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -354,7 +390,7 @@ export default function ResumeUpload() {
                 </motion.div>
 
                 {analysis.atsScore && (
-                  <motion.div 
+                  <motion.div
                     className="bg-gray-50 border-2 border-black p-4"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -371,7 +407,7 @@ export default function ResumeUpload() {
                       ].map((section, i) => {
                         const score = analysis.atsScore?.sections[section.key as keyof typeof analysis.atsScore.sections] || 0;
                         return (
-                          <motion.div 
+                          <motion.div
                             key={section.key}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -383,7 +419,7 @@ export default function ResumeUpload() {
                               <span className="font-bold">{score}/100</span>
                             </div>
                             <div className="h-3 bg-gray-200 border border-black overflow-hidden">
-                              <motion.div 
+                              <motion.div
                                 className={`h-full ${section.color}`}
                                 initial={{ width: 0 }}
                                 animate={{ width: `${score}%` }}
@@ -397,7 +433,7 @@ export default function ResumeUpload() {
                   </motion.div>
                 )}
 
-                <motion.div 
+                <motion.div
                   className="bg-gray-100 border-2 border-black p-4"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -408,7 +444,7 @@ export default function ResumeUpload() {
 
                 {analysis.atsScore && (
                   <div className="grid md:grid-cols-2 gap-4">
-                    <motion.div 
+                    <motion.div
                       className="border-2 border-black p-4 bg-green-50"
                       initial={{ opacity: 0, x: -30 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -417,7 +453,7 @@ export default function ResumeUpload() {
                       <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">MATCHED KEYWORDS</h3>
                       <div className="flex flex-wrap gap-1">
                         {analysis.atsScore.matchedKeywords.slice(0, 10).map((kw, i) => (
-                          <motion.span 
+                          <motion.span
                             key={i}
                             className="bg-green-200 border border-black px-2 py-0.5 text-[10px] font-mono uppercase"
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -433,7 +469,7 @@ export default function ResumeUpload() {
                         )}
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="border-2 border-black p-4 bg-red-50"
                       initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -442,7 +478,7 @@ export default function ResumeUpload() {
                       <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">MISSING KEYWORDS</h3>
                       <div className="flex flex-wrap gap-1">
                         {analysis.atsScore.missingKeywords.slice(0, 10).map((kw, i) => (
-                          <motion.span 
+                          <motion.span
                             key={i}
                             className="bg-red-200 border border-black px-2 py-0.5 text-[10px] font-mono uppercase"
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -459,7 +495,7 @@ export default function ResumeUpload() {
                 )}
 
                 <div className="grid md:grid-cols-2 gap-4">
-                  <motion.div 
+                  <motion.div
                     className="border-2 border-black p-4 bg-cyan-50"
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -468,9 +504,9 @@ export default function ResumeUpload() {
                     <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">STRENGTHS</h3>
                     <ul className="space-y-2">
                       {analysis.strengths.map((s, i) => (
-                        <motion.li 
-                          key={i} 
-                          className="font-mono text-xs flex items-start gap-2" 
+                        <motion.li
+                          key={i}
+                          className="font-mono text-xs flex items-start gap-2"
                           data-testid={`text-strength-${i}`}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
@@ -481,7 +517,7 @@ export default function ResumeUpload() {
                       ))}
                     </ul>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="border-2 border-black p-4 bg-orange-50"
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -490,9 +526,9 @@ export default function ResumeUpload() {
                     <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">AREAS TO IMPROVE</h3>
                     <ul className="space-y-2">
                       {analysis.weaknesses.map((w, i) => (
-                        <motion.li 
-                          key={i} 
-                          className="font-mono text-xs flex items-start gap-2" 
+                        <motion.li
+                          key={i}
+                          className="font-mono text-xs flex items-start gap-2"
                           data-testid={`text-weakness-${i}`}
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
@@ -506,7 +542,7 @@ export default function ResumeUpload() {
                 </div>
 
                 {analysis.atsScore && analysis.atsScore.recommendations.length > 0 && (
-                  <motion.div 
+                  <motion.div
                     className="border-2 border-black p-4 bg-yellow-50"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -515,8 +551,8 @@ export default function ResumeUpload() {
                     <h3 className="font-display text-sm mb-3 border-b-2 border-black pb-2">HR-9000 RECOMMENDATIONS</h3>
                     <ul className="space-y-2">
                       {analysis.atsScore.recommendations.map((rec, i) => (
-                        <motion.li 
-                          key={i} 
+                        <motion.li
+                          key={i}
                           className="font-mono text-xs flex items-start gap-2"
                           data-testid={`recommendation-${i}`}
                           initial={{ opacity: 0, x: -10 }}
@@ -545,13 +581,13 @@ export default function ResumeUpload() {
                 </motion.button>
               </motion.div>
             ) : (
-              <motion.div 
+              <motion.div
                 className="space-y-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
                 <div className="h-8 border-4 border-black bg-gray-200 relative overflow-hidden">
-                  <motion.div 
+                  <motion.div
                     className="absolute top-0 left-0 h-full bg-secondary"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
@@ -570,35 +606,35 @@ export default function ResumeUpload() {
                     {Math.round(progress)}%
                   </div>
                 </div>
-                
-                <motion.p 
-                  className="font-mono text-lg" 
+
+                <motion.p
+                  className="font-mono text-lg"
                   data-testid="text-upload-status"
                   animate={{ opacity: [1, 0.5, 1] }}
                   transition={{ duration: 0.8, repeat: Infinity }}
                 >
                   {status}
                 </motion.p>
-                
+
                 {analyzing && (
-                  <motion.div 
+                  <motion.div
                     className="flex items-center justify-center gap-2 text-sm font-mono text-gray-600"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <motion.div 
+                    <motion.div
                       className="flex gap-1"
                     >
                       {[...Array(3)].map((_, i) => (
                         <motion.div
                           key={i}
                           className="w-3 h-3 bg-secondary"
-                          animate={{ 
+                          animate={{
                             scale: [1, 1.5, 1],
                             opacity: [1, 0.5, 1],
                             rotate: [0, 180, 360]
                           }}
-                          transition={{ 
+                          transition={{
                             duration: 1,
                             repeat: Infinity,
                             delay: i * 0.2
@@ -610,7 +646,7 @@ export default function ResumeUpload() {
                   </motion.div>
                 )}
 
-                <motion.div 
+                <motion.div
                   className="grid grid-cols-4 gap-2 mt-4"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: analyzing ? 1 : 0.3 }}
@@ -634,8 +670,8 @@ export default function ResumeUpload() {
               </motion.div>
             )}
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="absolute -top-4 -right-4 bg-accent border-2 border-black p-2 font-mono text-xs rotate-12 z-20"
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
             animate={{ opacity: 1, scale: 1, rotate: 12 }}
@@ -644,7 +680,7 @@ export default function ResumeUpload() {
           >
             ATS FRIENDLY!
           </motion.div>
-          <motion.div 
+          <motion.div
             className="absolute -bottom-6 -left-6 bg-destructive text-white border-2 border-black p-2 font-mono text-xs -rotate-6 z-20"
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
             animate={{ opacity: 1, scale: 1, rotate: -6 }}
